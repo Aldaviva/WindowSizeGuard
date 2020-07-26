@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{670C3660-0020-4577-A052-91552376B63F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>WindowSizeGuard</RootNamespace>
     <AssemblyName>WindowSizeGuard</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
@@ -42,6 +42,9 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>window.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility" />
     <Reference Include="PresentationFramework" />
@@ -61,13 +64,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutofacHelpers.cs" />
-    <Compile Include="AutofacModules.cs" />
-    <Compile Include="AvidemuxSizeGuard.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="HotkeyHandler.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarAwareSizeGuard.cs" />
+    <Compile Include="VivaldiHandler.cs" />
     <Compile Include="WindowResizer.cs" />
     <Compile Include="WindowZoneManager.cs" />
   </ItemGroup>
@@ -83,7 +85,7 @@
       <Version>5.2.0</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
-      <Version>10.2.1</Version>
+      <Version>2020.1.0</Version>
     </PackageReference>
     <PackageReference Include="KoKo">
       <Version>2.0.2</Version>
@@ -100,9 +102,9 @@
     <PackageReference Include="NLog">
       <Version>4.7.2</Version>
     </PackageReference>
-    <PackageReference Include="ThrottleDebounce">
-      <Version>1.0.2</Version>
-    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="window.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

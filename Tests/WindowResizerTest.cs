@@ -41,11 +41,11 @@ namespace Tests {
         //     WindowResizerImpl.isWindowWithNoPadding(window);
         // }
 
-        [Benchmark]
-        public void getTopMostWindowsUsingUiAutomation() {
-            // AutomationElementCollection automationElementCollection = AutomationElement.RootElement.FindAll(TreeScope.Children, RESIZABLE_WINDOWS_CONDITION);
-            IList<AutomationElement> findResizableWindows = windowResizer.findResizableWindows(parent: (AutomationElement?) null, depth: depth).ToList();
-        }
+        // [Benchmark]
+        // public void getTopMostWindowsUsingUiAutomation() {
+        //     // AutomationElementCollection automationElementCollection = AutomationElement.RootElement.FindAll(TreeScope.Children, RESIZABLE_WINDOWS_CONDITION);
+        //     IList<AutomationElement> findResizableWindows = windowResizer.findResizableWindows(parent: (AutomationElement?) null, depth: depth).ToList();
+        // }
 
         [Benchmark]
         public void getTopMostWindowsUsingWinApi() {

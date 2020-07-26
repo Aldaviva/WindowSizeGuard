@@ -14,18 +14,15 @@ namespace WindowSizeGuard {
             var assembly = Assembly.GetExecutingAssembly();
 
             containerBuilder.RegisterAssemblyTypes(assembly)
-                .Where(t => t.GetCustomAttribute<ComponentAttribute>() != null)
-                .AsImplementedInterfaces()
-                .AsSelf()
-                .InstancePerLifetimeScope()
-                .OnActivated(eventArgs => eventArgs.Instance.GetType()
-                    .GetMethod("PostConstruct", new Type[0])?
-                    .Invoke(eventArgs.Instance, new object[0]));
+                            .Where(t => t.GetCustomAttribute<ComponentAttribute>() != null)
+                            .AsImplementedInterfaces()
+                            .AsSelf()
+                            .InstancePerLifetimeScope()
+                            .OnActivated(eventArgs => eventArgs.Instance.GetType().GetMethod("PostConstruct", new Type[0])?.Invoke(eventArgs.Instance, new object[0]));
 
             containerBuilder.RegisterAssemblyModules(assembly);
 
             return containerBuilder.Build();
-
         }
 
     }

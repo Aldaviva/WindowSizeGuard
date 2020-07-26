@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("WindowSizeGuard")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Window Size Guard")]
+[assembly: AssemblyDescription("Window Size Guard")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Ben's World")]
+[assembly: AssemblyCompany("Ben Hutchison")]
 [assembly: AssemblyProduct("WindowSizeGuard")]
-[assembly: AssemblyCopyright("Copyright © Ben's World 2020")]
+[assembly: AssemblyCopyright("Copyright © Ben Hutchison 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

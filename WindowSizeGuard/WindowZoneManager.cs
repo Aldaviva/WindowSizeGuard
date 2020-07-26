@@ -43,11 +43,11 @@ namespace WindowSizeGuard {
 
     public struct WindowZoneSearchResult {
 
-        public Rect proportionalZoneRectangle;
-        public RECT actualZoneRectPosition;
-        public double distance;
+        public Rect       proportionalZoneRectangle;
+        public RECT       actualZoneRectPosition;
+        public double     distance;
         public WindowZone zone;
-        public int zoneRectangleIndex;
+        public int        zoneRectangleIndex;
 
     }
 
@@ -56,15 +56,13 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private const int RECTANGLE_DISTANCE_SAME = 1;
+        private const int RECTANGLE_DISTANCE_SAME  = 1;
         private const int RECTANGLE_DISTANCE_CLOSE = 5;
 
         private readonly WindowResizer windowResizer;
-        // private readonly SystemWindow applicationFrameWindow;
 
         public WindowZoneManagerImpl(WindowResizer windowResizer) {
             this.windowResizer = windowResizer;
-            // this.applicationFrameWindow = applicationFrameWindow;
         }
 
         public void toggleForegroundWindowAlwaysOnTop() {
@@ -72,10 +70,7 @@ namespace WindowSizeGuard {
         }
 
         public void maximizeForegroundWindow() {
-            SystemWindow foregroundWindow = SystemWindow.ForegroundWindow;
-            // if (foregroundWindow.Resizable) {
-            foregroundWindow.WindowState = FormWindowState.Maximized;
-            // }
+            SystemWindow.ForegroundWindow.WindowState = FormWindowState.Maximized;
         }
 
         public void minimizeForegroundWindow() {
@@ -106,21 +101,17 @@ namespace WindowSizeGuard {
                     findClosestZoneRectangleToWindow(windowResizer.shrinkRectangle(window.Position, windowPadding), workingArea, zone);
 
                 int zoneRectangleIndex = closestZoneRectangleToOldWindowPosition switch {
-                    var r when r.distance <= RECTANGLE_DISTANCE_SAME => (r.zoneRectangleIndex + 1) % proportionalRectanglesForZone.Count,
+                    var r when r.distance <= RECTANGLE_DISTANCE_SAME  => (r.zoneRectangleIndex + 1) % proportionalRectanglesForZone.Count,
                     var r when r.distance <= RECTANGLE_DISTANCE_CLOSE => r.zoneRectangleIndex,
-                    _ => 0
+                    _                                                 => 0
                 };
 
                 proportionalRectangleToResizeTo = proportionalRectanglesForZone[zoneRectangleIndex];
             }
 
-            // LOGGER.Debug($"Working area: {workingArea}, proportional rectangle to resize to: {proportionalRectangleToResizeTo}");
-
             RECT newPositionRelativeToWorkingArea = convertProportionalRectangleToActualRectangle(proportionalRectangleToResizeTo, workingArea);
-            RECT newPositionRelativeToScreen = getAbsolutePosition(newPositionRelativeToWorkingArea, workingArea.Location);
-            // RECT newPositionRelativeToScreen = newPositionRelativeToWorkingArea;
-            // LOGGER.Debug($"New position for window before padding is {newPositionRelativeToScreen.toString()}");
-            newPositionRelativeToScreen = windowResizer.enlargeRectangle(newPositionRelativeToScreen, windowPadding);
+            RECT newPositionRelativeToScreen = windowResizer.getRelativePosition(newPositionRelativeToWorkingArea, workingArea.Location);
+            RECT newPositionWithPaddingRemoved = windowResizer.enlargeRectangle(newPositionRelativeToScreen, windowPadding);
 
             // LOGGER.Debug(
             //     $"Moving {window.Process.ProcessName} to [top={newPositionRelativeToScreen.Top}, bottom={newPositionRelativeToScreen.Bottom}, left={newPositionRelativeToScreen.Left}, right={newPositionRelativeToScreen.Right}, width={newPositionRelativeToScreen.Width}, height={newPositionRelativeToScreen.Height}], accounting for window padding of {windowPadding.toString()}");
@@ -129,23 +120,7 @@ namespace WindowSizeGuard {
                 window.WindowState = FormWindowState.Normal;
             }
 
-            windowResizer.moveWindowToPosition(window, newPositionRelativeToScreen);
-        }
-
-        private static RECT getAbsolutePosition(RECT original, POINT wasRelativeTo) {
-            return new RECT(left_: original.Left - wasRelativeTo.X,
-                top_: original.Top - wasRelativeTo.Y, 
-                right_: original.Right - wasRelativeTo.X, 
-                bottom_: original.Bottom - wasRelativeTo.Y);
-        }
-
-        private static double getRectangleDistance(RECT a, RECT b) {
-            double squaredEdgeDistances = 0;
-            squaredEdgeDistances += Math.Pow(a.Top - b.Top, 2);
-            squaredEdgeDistances += Math.Pow(a.Bottom - b.Bottom, 2);
-            squaredEdgeDistances += Math.Pow(a.Left - b.Left, 2);
-            squaredEdgeDistances += Math.Pow(a.Right - b.Right, 2);
-            return Math.Sqrt(squaredEdgeDistances);
+            windowResizer.moveWindowToPosition(window, newPositionWithPaddingRemoved);
         }
 
         private static RECT convertProportionalRectangleToActualRectangle(Rect proportionalRectangle, RECT actualRectangle) {
@@ -158,8 +133,8 @@ namespace WindowSizeGuard {
 
         public WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea) {
             return Enum.GetValues(typeof(WindowZone)).Cast<WindowZone>()
-                .Select(zone => findClosestZoneRectangleToWindow(windowPosition, workingArea, zone))
-                .MinBy(result => result.distance).First();
+                       .Select(zone => findClosestZoneRectangleToWindow(windowPosition, workingArea, zone))
+                       .MinBy(result => result.distance).First();
         }
 
         private WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea, WindowZone zone) {
@@ -168,11 +143,11 @@ namespace WindowSizeGuard {
             IEnumerable<WindowZoneSearchResult> windowZoneSearchResults = proportionalZoneRectangles.Select((proportionalZoneRectangle, zoneIndex) => {
                 var result = new WindowZoneSearchResult {
                     proportionalZoneRectangle = proportionalZoneRectangle,
-                    actualZoneRectPosition = getAbsolutePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
-                    zone = zone,
-                    zoneRectangleIndex = zoneIndex
+                    actualZoneRectPosition    = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
+                    zone                      = zone,
+                    zoneRectangleIndex        = zoneIndex
                 };
-                result.distance = getRectangleDistance(result.actualZoneRectPosition, windowPosition);
+                result.distance = windowResizer.getRectangleDistance(result.actualZoneRectPosition, windowPosition);
 
                 return result;
             });

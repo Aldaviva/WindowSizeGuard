@@ -8,20 +8,24 @@ using NLog;
 
 namespace WindowSizeGuard {
 
-    public interface HotkeyHandler { }
+    public interface HotkeyHandler {
+
+        void onKeyDown(object sender, KeyEventArgs e);
+
+    }
 
     [Component]
     public class HotkeyHandlerImpl: HotkeyHandler, IDisposable {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private readonly WindowZoneManager windowZoneManager;
+        private readonly WindowZoneManager    windowZoneManager;
         private readonly IKeyboardMouseEvents globalHook;
 
         public HotkeyHandlerImpl(WindowZoneManager windowZoneManager) {
             this.windowZoneManager = windowZoneManager;
 
-            globalHook = Hook.GlobalEvents();
+            globalHook         =  Hook.GlobalEvents();
             globalHook.KeyDown += onKeyDown;
 
             LOGGER.Info("Waiting for hotkeys.");
@@ -32,7 +36,7 @@ namespace WindowSizeGuard {
             globalHook.Dispose();
         }
 
-        private void onKeyDown(object sender, KeyEventArgs _e) {
+        public void onKeyDown(object sender, KeyEventArgs _e) {
             var e = (KeyEventArgsExt) _e;
             e.Handled = true; //will be set back to false at the end of this method if nothing handles this key
 
@@ -45,11 +49,11 @@ namespace WindowSizeGuard {
             // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault we're not trying to handle every possible key
             switch (e.KeyCode) {
                 case Keys.PageDown when winPressed:
-                case Keys.Right when winPressed:
+                case Keys.Right when winPressed && !e.Control: // Win+Ctrl+Right is Next Virtual Desktop, which should be preserved
                     windowZoneManager.resizeWindowToZone(foregroundWindow, WindowZone.RIGHT, rectangleInZone);
                     break;
                 case Keys.Delete when winPressed:
-                case Keys.Left when winPressed:
+                case Keys.Left when winPressed && !e.Control: // Win+Ctrl+Left is Previous Virtual Desktop, which should be preserved
                     windowZoneManager.resizeWindowToZone(foregroundWindow, WindowZone.LEFT, rectangleInZone);
                     break;
                 case Keys.Home when winPressed:
@@ -83,6 +87,9 @@ namespace WindowSizeGuard {
                     break;
                 case Keys.T when winPressed:
                     windowZoneManager.toggleForegroundWindowAlwaysOnTop();
+                    break;
+                case Keys.Delete when winAltPressed:
+                    // do nothing, to prevent accidental deletion when alt is pressed
                     break;
                 default:
                     e.Handled = false;
