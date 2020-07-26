@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Automation;
 using System.Windows.Forms;
 using KoKo.Events;
@@ -24,16 +25,18 @@ namespace WindowSizeGuard {
         private const           int    ESTIMATED_TOOLBAR_HEIGHT                    = 25;
         private static readonly double MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE = Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT, 2) + Math.Pow(2, 2)));
 
-        private readonly WindowResizer     windowResizer;
-        private readonly WindowZoneManager windowZoneManager;
-        private readonly VivaldiHandler    vivaldiHandler;
+        private readonly WindowResizer        windowResizer;
+        private readonly WindowZoneManager    windowZoneManager;
+        private readonly VivaldiHandler       vivaldiHandler;
+        private readonly GitExtensionsHandler gitExtensionsHandler;
 
         private readonly ManuallyRecalculatedProperty<Rectangle> workingArea = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
 
-        public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler) {
-            this.windowResizer     = windowResizer;
-            this.windowZoneManager = windowZoneManager;
-            this.vivaldiHandler    = vivaldiHandler;
+        public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
+            this.windowResizer        = windowResizer;
+            this.windowZoneManager    = windowZoneManager;
+            this.vivaldiHandler       = vivaldiHandler;
+            this.gitExtensionsHandler = gitExtensionsHandler;
 
             SystemEvents.UserPreferenceChanged += (sender, args) => {
                 if (args.Category == UserPreferenceCategory.Desktop) {
@@ -45,6 +48,8 @@ namespace WindowSizeGuard {
             isToolbarVisible.PropertyChanged += onToolbarResized;
 
             Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onAnyWindowOpened);
+
+            gitExtensionsHandler.commitWindowOpened += onAnyWindowOpened;
         }
 
         private void onAnyWindowRestored(object sender, AutomationPropertyChangedEventArgs e) {
@@ -55,7 +60,11 @@ namespace WindowSizeGuard {
         }
 
         private void onAnyWindowOpened(object sender, AutomationEventArgs e) {
-            var window = ((AutomationElement) sender).toSystemWindow();
+            onAnyWindowOpened(((AutomationElement) sender).toSystemWindow());
+        }
+
+        private void onAnyWindowOpened(SystemWindow window) {
+            LOGGER.Debug("Window opened: {0} ({1})", window.Title, window.ClassName);
             if (windowResizer.canWindowBeManuallyResized(window)) {
                 resizeWindowIfNecessary(window);
             }
@@ -71,6 +80,10 @@ namespace WindowSizeGuard {
                 }
 
                 resizeWindowIfNecessary(window);
+            }
+
+            foreach (SystemWindow gitCommitWindow in gitExtensionsHandler.commitWindows.Where(windowResizer.canWindowBeAutomaticallyResized)) {
+                resizeWindowIfNecessary(gitCommitWindow);
             }
 
             stopwatch.Stop();
