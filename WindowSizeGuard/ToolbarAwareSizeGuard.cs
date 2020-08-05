@@ -1,10 +1,12 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Forms;
 using KoKo.Events;
@@ -22,15 +24,20 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private const           int    ESTIMATED_TOOLBAR_HEIGHT                    = 25;
-        private static readonly double MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE = Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT, 2) + Math.Pow(2, 2)));
+        private const int ESTIMATED_TOOLBAR_HEIGHT = 25;
+        private const int HORIZONTAL_EDGE_TOLERANCE = 2;
+        private const int VERTICAL_EDGE_TOLERANCE = 5;
 
-        private readonly WindowResizer        windowResizer;
-        private readonly WindowZoneManager    windowZoneManager;
-        private readonly VivaldiHandler       vivaldiHandler;
+        private static readonly double MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE =
+            Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
+
+        private readonly WindowResizer windowResizer;
+        private readonly WindowZoneManager windowZoneManager;
+        private readonly VivaldiHandler vivaldiHandler;
         private readonly GitExtensionsHandler gitExtensionsHandler;
 
         private readonly ManuallyRecalculatedProperty<Rectangle> workingArea = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
+        private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = new ConcurrentDictionary<int, ValueHolder<int>>();
 
         public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
             this.windowResizer        = windowResizer;
@@ -48,14 +55,29 @@ namespace WindowSizeGuard {
             isToolbarVisible.PropertyChanged += onToolbarResized;
 
             Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onAnyWindowOpened);
+            Automation.AddAutomationPropertyChangedEventHandler(AutomationElement.RootElement, TreeScope.Children, onAnyWindowRestored, WindowPattern.WindowVisualStateProperty);
 
             gitExtensionsHandler.commitWindowOpened += onAnyWindowOpened;
+
+            foreach (SystemWindow toplevelWindow in SystemWindow.AllToplevelWindows) {
+                windowVisualStateCache[toplevelWindow.HWnd.ToInt32()] = new ValueHolder<int>((int) toplevelWindow.WindowState);
+            }
         }
 
         private void onAnyWindowRestored(object sender, AutomationPropertyChangedEventArgs e) {
-            var window = ((AutomationElement) sender).toSystemWindow();
-            if ((WindowVisualState) e.NewValue == WindowVisualState.Normal && windowResizer.canWindowBeManuallyResized(window)) {
-                resizeWindowIfNecessary(window);
+            try {
+                int windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
+                var window = new SystemWindow(new IntPtr(windowHandle));
+
+                FormWindowState newWindowState = window.WindowState;
+                FormWindowState oldWindowState = exchangeEnumInConcurrentDictionary(windowVisualStateCache, windowHandle, newWindowState);
+
+                if (oldWindowState != newWindowState && windowResizer.canWindowBeAutomaticallyResized(window)) {
+                    resizeWindowIfNecessary(window);
+                }
+            } catch (NullReferenceException exception) {
+                MessageBox.Show("null reference exception: " + exception.Message + exception.StackTrace, "WindowSizeGuard.ToolbarAwareSizeGuard.onAnyWindowRestored()", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -65,9 +87,12 @@ namespace WindowSizeGuard {
 
         private void onAnyWindowOpened(SystemWindow window) {
             LOGGER.Debug("Window opened: {0} ({1})", window.Title, window.ClassName);
-            if (windowResizer.canWindowBeManuallyResized(window)) {
+            if (windowResizer.canWindowBeAutomaticallyResized(window)) {
                 resizeWindowIfNecessary(window);
             }
+
+            var newWindowState = new ValueHolder<int>((int) window.WindowState);
+            windowVisualStateCache.AddOrUpdate(window.HWnd.ToInt32(), newWindowState, (i, holder) => newWindowState);
         }
 
         private void onToolbarResized(object sender, KoKoPropertyChangedEventArgs<bool> e) {
@@ -93,16 +118,40 @@ namespace WindowSizeGuard {
         private void resizeWindowIfNecessary(SystemWindow window) {
             RECT windowPosition = window.Position;
             RECT windowPadding = windowResizer.getWindowPadding(window);
+            RECT windowPositionWithPaddingRemoved = windowResizer.shrinkRectangle(windowPosition, windowPadding);
 
-            WindowZoneSearchResult closestZoneRectangleToWindow = windowZoneManager.findClosestZoneRectangleToWindow(windowResizer.shrinkRectangle(windowPosition, windowPadding), workingArea.Value);
+            WindowZoneSearchResult closestZoneRectangleToWindow = windowZoneManager.findClosestZoneRectangleToWindow(windowPositionWithPaddingRemoved, workingArea.Value);
 
             if (closestZoneRectangleToWindow.distance <= MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE) {
+                LOGGER.Debug($"Resizing {window.Title}...");
                 windowZoneManager.resizeWindowToZone(window, closestZoneRectangleToWindow.zone, closestZoneRectangleToWindow.zoneRectangleIndex);
+            } else if (LOGGER.IsDebugEnabled) {
+                LOGGER.Trace("Not resizing window {0} ({1}) because its dimensions are too far from zone {4} (distance {2:N2} is greater than maximum distance {3:N2}). " +
+                             "Window position = {5}, zone position = {6}.", window.Title, window.ClassName, closestZoneRectangleToWindow.distance, MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE,
+                    closestZoneRectangleToWindow.zone, windowPositionWithPaddingRemoved.toString(), closestZoneRectangleToWindow.actualZoneRectPosition.toString());
             }
         }
 
         public void Dispose() {
-            Automation.RemoveAllEventHandlers();
+            Automation.RemoveAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, onAnyWindowOpened);
+            Automation.RemoveAutomationPropertyChangedEventHandler(AutomationElement.RootElement, onAnyWindowRestored);
+        }
+
+        private static V exchangeEnumInConcurrentDictionary<K, V>(ConcurrentDictionary<K, ValueHolder<int>> dictionary, K key, V newValue) where V: Enum {
+            int newValueInt = (int) Convert.ChangeType(newValue, newValue.GetTypeCode());
+            ValueHolder<int> existingWindowState = dictionary.GetOrAdd(key, new ValueHolder<int>(newValueInt));
+            int oldValue = Interlocked.Exchange(ref existingWindowState.value, newValueInt);
+            return (V) Enum.ToObject(typeof(V), oldValue);
+        }
+
+        private class ValueHolder<T> {
+
+            public T value;
+
+            public ValueHolder(T value) {
+                this.value = value;
+            }
+
         }
 
     }
