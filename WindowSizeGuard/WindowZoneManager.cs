@@ -6,10 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
-using Autofac.Features.AttributeFilters;
 using ManagedWinapi.Windows;
 using MoreLinq;
-using NLog;
 
 namespace WindowSizeGuard {
 
@@ -43,20 +41,18 @@ namespace WindowSizeGuard {
 
     public struct WindowZoneSearchResult {
 
-        public Rect       proportionalZoneRectangle;
-        public RECT       actualZoneRectPosition;
-        public double     distance;
+        public Rect proportionalZoneRectangle;
+        public RECT actualZoneRectPosition;
+        public double distance;
         public WindowZone zone;
-        public int        zoneRectangleIndex;
+        public int zoneRectangleIndex;
 
     }
 
     [Component]
     public class WindowZoneManagerImpl: WindowZoneManager {
 
-        private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
-
-        private const int RECTANGLE_DISTANCE_SAME  = 1;
+        private const int RECTANGLE_DISTANCE_SAME = 1;
         private const int RECTANGLE_DISTANCE_CLOSE = 5;
 
         private readonly WindowResizer windowResizer;

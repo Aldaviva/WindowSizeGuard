@@ -19,7 +19,7 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private readonly WindowZoneManager    windowZoneManager;
+        private readonly WindowZoneManager windowZoneManager;
         private readonly IKeyboardMouseEvents globalHook;
 
         public HotkeyHandlerImpl(WindowZoneManager windowZoneManager) {
@@ -28,7 +28,7 @@ namespace WindowSizeGuard {
             globalHook         =  Hook.GlobalEvents();
             globalHook.KeyDown += onKeyDown;
 
-            LOGGER.Info("Waiting for hotkeys.");
+            LOGGER.Trace("Waiting for hotkeys.");
         }
 
         public void Dispose() {

@@ -3,15 +3,20 @@
 using System;
 using System.Windows.Forms;
 using Autofac;
+using NLog;
 
 namespace WindowSizeGuard {
 
     public static class MainClass {
 
+        private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
+
         [STAThread] //important, otherwise hotkeys don't trigger and Windows times out after ~2 seconds, then handles the hotkey normally
         public static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) => LOGGER.Error(args.ExceptionObject);
 
             IContainer autofacContainer = AutofacHelpers.createContainer();
             using var scope = autofacContainer.BeginLifetimeScope();

@@ -25,11 +25,11 @@ namespace WindowSizeGuard {
     public class GitExtensionsHandlerImpl: GitExtensionsHandler, IDisposable {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
-        private readonly        Timer  timer;
+        private readonly Timer timer;
 
         public event CommitWindowOpenedEventHandler? commitWindowOpened;
 
-        public IEnumerable<SystemWindow> commitWindows => _commitWindows;
+        public IEnumerable<SystemWindow> commitWindows => new HashSet<SystemWindow>(_commitWindows);
 
         private readonly DebouncedAction<bool> _onWindowClosedThrottled;
 
@@ -41,18 +41,17 @@ namespace WindowSizeGuard {
 
             timer = new Timer {
                 AutoReset = true,
-                Interval  = 500
+                Interval  = 200
             };
 
             timer.Elapsed += findCommitWindows;
 
             Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onWindowOpened);
-
             Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, AutomationElement.RootElement, TreeScope.Subtree, onWindowClosedThrottled);
 
             _onWindowClosedThrottled.Run(true);
 
-            LOGGER.Debug("Waiting for Git Extensions commit window");
+            LOGGER.Trace("Waiting for Git Extensions commit window");
         }
 
         private void onWindowOpened(object sender, AutomationEventArgs? e = null) {
@@ -60,17 +59,17 @@ namespace WindowSizeGuard {
                 timer.Enabled = true;
             }
 
-            LOGGER.Debug("Window opened, timer is {0}", timer.Enabled ? "enabled" : "disabled");
+            LOGGER.Trace("Window opened, timer is {0}", timer.Enabled ? "enabled" : "disabled");
         }
 
-        private void onWindowClosedThrottled(object? sender=null, AutomationEventArgs? e=null) {
+        private void onWindowClosedThrottled(object? sender = null, AutomationEventArgs? e = null) {
             _onWindowClosedThrottled.Run(false);
         }
 
         private void onWindowClosed(bool firstRun = false) {
             if (firstRun || timer.Enabled) {
                 timer.Enabled = SystemWindow.FilterToplevelWindows(isGitExtensionsMainWindow).Any();
-                LOGGER.Debug("Starting up or a window was closed, timer is {0}", timer.Enabled ? "enabled" : "disabled");
+                LOGGER.Trace("Starting up or a window was closed, timer is {0}", timer.Enabled ? "enabled" : "disabled");
             }
         }
 
