@@ -40,9 +40,9 @@ namespace WindowSizeGuard {
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = new ConcurrentDictionary<int, ValueHolder<int>>();
 
         public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
-            this.windowResizer        = windowResizer;
-            this.windowZoneManager    = windowZoneManager;
-            this.vivaldiHandler       = vivaldiHandler;
+            this.windowResizer = windowResizer;
+            this.windowZoneManager = windowZoneManager;
+            this.vivaldiHandler = vivaldiHandler;
             this.gitExtensionsHandler = gitExtensionsHandler;
 
             SystemEvents.UserPreferenceChanged += (sender, args) => {
@@ -64,20 +64,19 @@ namespace WindowSizeGuard {
             }
         }
 
-        private void onAnyWindowRestored(object sender, AutomationPropertyChangedEventArgs e) {
-            try {
-                int windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
-                var window = new SystemWindow(new IntPtr(windowHandle));
+        private void onAnyWindowRestored(object? sender, AutomationPropertyChangedEventArgs e) {
+            if (sender == null) {
+                return;
+            }
 
-                FormWindowState newWindowState = window.WindowState;
-                FormWindowState oldWindowState = exchangeEnumInConcurrentDictionary(windowVisualStateCache, windowHandle, newWindowState);
+            int windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
+            var window = new SystemWindow(new IntPtr(windowHandle));
 
-                if (oldWindowState != newWindowState && windowResizer.canWindowBeAutomaticallyResized(window)) {
-                    resizeWindowIfNecessary(window);
-                }
-            } catch (NullReferenceException exception) {
-                MessageBox.Show("null reference exception: " + exception.Message + exception.StackTrace, "WindowSizeGuard.ToolbarAwareSizeGuard.onAnyWindowRestored()", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+            FormWindowState newWindowState = window.WindowState;
+            FormWindowState oldWindowState = exchangeEnumInConcurrentDictionary(windowVisualStateCache, windowHandle, newWindowState);
+
+            if (oldWindowState != newWindowState && windowResizer.canWindowBeAutomaticallyResized(window)) {
+                resizeWindowIfNecessary(window);
             }
         }
 
@@ -127,7 +126,7 @@ namespace WindowSizeGuard {
                 windowZoneManager.resizeWindowToZone(window, closestZoneRectangleToWindow.zone, closestZoneRectangleToWindow.zoneRectangleIndex);
             } else if (LOGGER.IsDebugEnabled) {
                 LOGGER.Trace("Not resizing window {0} ({1}) because its dimensions are too far from zone {4} (distance {2:N2} is greater than maximum distance {3:N2}). " +
-                             "Window position = {5}, zone position = {6}.", window.Title, window.ClassName, closestZoneRectangleToWindow.distance, MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE,
+                    "Window position = {5}, zone position = {6}.", window.Title, window.ClassName, closestZoneRectangleToWindow.distance, MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE,
                     closestZoneRectangleToWindow.zone, windowPositionWithPaddingRemoved.toString(), closestZoneRectangleToWindow.actualZoneRectPosition.toString());
             }
         }

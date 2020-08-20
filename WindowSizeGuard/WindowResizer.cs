@@ -42,21 +42,34 @@ namespace WindowSizeGuard {
         // to blacklist a title suffix, use titlePattern: new Regex(@"^.*(?<! ‎- OneNote for Windows 10)$")
         // these are all case-sensitive
         private static readonly IEnumerable<WindowSelector> WINDOWS_WITH_NO_PADDING = new[] {
-            new WindowSelector(className: "XLMAIN"),              //Excel
-            new WindowSelector(className: "OpusApp"),             //Word
-            new WindowSelector(className: "rctrl_renwnd32"),      //Outlook
-            new WindowSelector(className: "PPTFrameClass"),       //PowerPoint
-            new WindowSelector(executableBaseName: "devenv.exe"), //Visual Studio
-            new WindowSelector(className: "Chrome_WidgetWin_1"),  //Chromium programs like Vivaldi and Logitech G Hub
-            new WindowSelector(className: "vguiPopupWindow"),     //Steam
-            new WindowSelector(title: "Epic Games Launcher"),
-            new WindowSelector(className: "Photoshop"),
-            new WindowSelector(className: "illustrator"),
-            new WindowSelector(className: "indesign"),
-            new WindowSelector(className: "_macr_dreamweaver_frame_window_"),
-            new WindowSelector(title: "TagScanner"),
-            new WindowSelector(className: "ESET Main Frame"),
-            new WindowSelector(className: "MozillaWindowClass")
+            new WindowSelector(className: "XLMAIN"),                          //Excel
+            new WindowSelector(className: "OpusApp"),                         //Word
+            new WindowSelector(className: "rctrl_renwnd32"),                  //Outlook
+            new WindowSelector(className: "PPTFrameClass"),                   //PowerPoint
+            new WindowSelector(executableBaseName: "devenv.exe"),             //Visual Studio
+            new WindowSelector(className: "Chrome_WidgetWin_1"),              //Chromium programs like Vivaldi and Logitech G Hub
+            new WindowSelector(className: "vguiPopupWindow"),                 //Steam
+            new WindowSelector(title: "Epic Games Launcher"),                 //Epic Games Launcher
+            new WindowSelector(className: "Photoshop"),                       //Photoshop
+            new WindowSelector(className: "illustrator"),                     //Illustrator
+            new WindowSelector(className: "indesign"),                        //InDesign
+            new WindowSelector(className: "_macr_dreamweaver_frame_window_"), //Dreamweaver
+            new WindowSelector(title: "TagScanner"),                          //TagScanner
+            new WindowSelector(className: "ESET Main Frame"),                 //ESET NOD32
+            new WindowSelector(className: "MozillaWindowClass")               //Firefox
+
+            // new WindowSelector(className: "test"),
+            // new WindowSelector(executableBaseName: "test"),
+            // new WindowSelector(title: "test"),
+            // new WindowSelector(title: new Regex("test")),
+            // new WindowSelector(className: "test", title: new Regex("test")),
+            // new WindowSelector(className: "test", title: "test"),
+            // new WindowSelector(executableBaseName: "test", className: "test"),
+            // new WindowSelector(executableBaseName: "test", className: "test"),
+            // new WindowSelector(executableBaseName: "test", className: "test", title: "test"),
+            // new WindowSelector(executableBaseName: "test", className: "test", title: new Regex("test")),
+            // new WindowSelector(executableBaseName: "test", title: "test"),
+            // new WindowSelector(executableBaseName: "test", title: new Regex("test")),
         };
 
         private static readonly RECT NO_PADDING = new RECT(0, 0, 0, 0);
@@ -155,13 +168,22 @@ namespace WindowSizeGuard {
         public readonly string? className;
         public readonly Regex? titlePattern;
 
-        public WindowSelector(string? executableBaseName = null, string? className = null, string? title = null, Regex? titlePattern = null) {
+        public WindowSelector(string? className = null, string? executableBaseName = null): this(executableBaseName, className, null, null) { }
+
+        public WindowSelector(Regex title, string? className = null, string? executableBaseName = null): this(executableBaseName, className, null, title) { }
+
+        public WindowSelector(string title, string? className = null, string? executableBaseName = null): this(executableBaseName, className, title, null) { }
+
+        private WindowSelector(string? executableBaseName, string? className, string? title, Regex? titlePattern) {
             if (titlePattern != null && title != null) {
                 throw new ArgumentException("Please specify at most 1 of the titlePattern and title arguments, not both.");
             }
 
-            this.className                        = className;
-            executableBaseNameWithoutExeExtension = executableBaseName != null ? Regex.Replace(executableBaseName, @"\.exe$", string.Empty, RegexOptions.IgnoreCase) : null;
+            this.className = className;
+
+            executableBaseNameWithoutExeExtension = executableBaseName != null
+                ? Regex.Replace(executableBaseName, @"\.exe$", string.Empty, RegexOptions.IgnoreCase)
+                : null;
 
             if (titlePattern != null) {
                 this.titlePattern = titlePattern;
