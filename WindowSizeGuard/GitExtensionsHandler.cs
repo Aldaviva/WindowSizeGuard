@@ -54,8 +54,8 @@ namespace WindowSizeGuard {
             LOGGER.Trace("Waiting for Git Extensions commit window");
         }
 
-        private void onWindowOpened(object sender, AutomationEventArgs? e = null) {
-            if (!timer.Enabled && isGitExtensionsMainWindow(((AutomationElement) sender).toSystemWindow())) {
+        private void onWindowOpened(object? sender, AutomationEventArgs? e = null) {
+            if (!timer.Enabled && sender != null && isGitExtensionsMainWindow(((AutomationElement) sender).toSystemWindow())) {
                 timer.Enabled = true;
             }
 
