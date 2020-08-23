@@ -41,7 +41,7 @@ namespace WindowSizeGuard {
 
             timer = new Timer {
                 AutoReset = true,
-                Interval  = 200
+                Interval = 200
             };
 
             timer.Elapsed += findCommitWindows;
@@ -77,7 +77,7 @@ namespace WindowSizeGuard {
 
         private void findCommitWindows(object? sender = null, ElapsedEventArgs? elapsedEventArgs = null) {
             ISet<SystemWindow> foundWindows = new HashSet<SystemWindow>(SystemWindow.FilterToplevelWindows(window =>
-                window.ClassName == "WindowsForms10.Window.8.app.0.2bf8098_r7_ad1" && window.Title.StartsWith("Commit to ")));
+                window.ClassName == "WindowsForms10.Window.8.app.0.2bf8098_r7_ad1" && window.Title.StartsWith("Commit")));
 
             ISet<SystemWindow> newWindows = new HashSet<SystemWindow>(foundWindows);
             newWindows.ExceptWith(_commitWindows);
