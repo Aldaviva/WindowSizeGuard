@@ -26,9 +26,9 @@ namespace WindowSizeGuard {
 
         private const int ESTIMATED_TOOLBAR_HEIGHT = 25;
         private const int HORIZONTAL_EDGE_TOLERANCE = 2;
-        private const int VERTICAL_EDGE_TOLERANCE = 5;
+        private const int VERTICAL_EDGE_TOLERANCE = 13;
 
-        private static readonly double MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE =
+        private static readonly double MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE =
             Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
 
         private readonly WindowResizer windowResizer;
@@ -44,6 +44,8 @@ namespace WindowSizeGuard {
             this.windowZoneManager = windowZoneManager;
             this.vivaldiHandler = vivaldiHandler;
             this.gitExtensionsHandler = gitExtensionsHandler;
+
+            // LOGGER.Info("max rectangle distance to automatically resize = {0:N2}", MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE);
 
             SystemEvents.UserPreferenceChanged += (sender, args) => {
                 if (args.Category == UserPreferenceCategory.Desktop) {
@@ -121,12 +123,12 @@ namespace WindowSizeGuard {
 
             WindowZoneSearchResult closestZoneRectangleToWindow = windowZoneManager.findClosestZoneRectangleToWindow(windowPositionWithPaddingRemoved, workingArea.Value);
 
-            if (closestZoneRectangleToWindow.distance <= MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE) {
+            if (closestZoneRectangleToWindow.distance <= MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE) {
                 LOGGER.Debug($"Resizing {window.Title}...");
                 windowZoneManager.resizeWindowToZone(window, closestZoneRectangleToWindow.zone, closestZoneRectangleToWindow.zoneRectangleIndex);
             } else if (LOGGER.IsDebugEnabled) {
                 LOGGER.Trace("Not resizing window {0} ({1}) because its dimensions are too far from zone {4} (distance {2:N2} is greater than maximum distance {3:N2}). " +
-                    "Window position = {5}, zone position = {6}.", window.Title, window.ClassName, closestZoneRectangleToWindow.distance, MAX_RECTANGLE_DISTANCE_AFTER_TOOLBAR_RESIZE,
+                    "Window position = {5}, zone position = {6}.", window.Title, window.ClassName, closestZoneRectangleToWindow.distance, MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE,
                     closestZoneRectangleToWindow.zone, windowPositionWithPaddingRemoved.toString(), closestZoneRectangleToWindow.actualZoneRectPosition.toString());
             }
         }
