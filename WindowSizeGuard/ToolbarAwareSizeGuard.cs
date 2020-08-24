@@ -14,10 +14,16 @@ using KoKo.Property;
 using ManagedWinapi.Windows;
 using Microsoft.Win32;
 using NLog;
+using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard {
 
-    public interface ToolbarAwareSizeGuard { }
+    public interface ToolbarAwareSizeGuard {
+
+        delegate void OnWindowOpened(object sender, SystemWindow window);
+        event OnWindowOpened? windowOpened;
+
+    }
 
     [Component]
     public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
@@ -25,8 +31,8 @@ namespace WindowSizeGuard {
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
         private const int ESTIMATED_TOOLBAR_HEIGHT = 25;
-        private const int HORIZONTAL_EDGE_TOLERANCE = 2;
-        private const int VERTICAL_EDGE_TOLERANCE = 13;
+        private const int HORIZONTAL_EDGE_TOLERANCE = 3;
+        private const int VERTICAL_EDGE_TOLERANCE = 16;
 
         private static readonly double MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE =
             Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
@@ -39,13 +45,13 @@ namespace WindowSizeGuard {
         private readonly ManuallyRecalculatedProperty<Rectangle> workingArea = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = new ConcurrentDictionary<int, ValueHolder<int>>();
 
+        public event ToolbarAwareSizeGuard.OnWindowOpened? windowOpened;
+
         public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
             this.windowResizer = windowResizer;
             this.windowZoneManager = windowZoneManager;
             this.vivaldiHandler = vivaldiHandler;
             this.gitExtensionsHandler = gitExtensionsHandler;
-
-            // LOGGER.Info("max rectangle distance to automatically resize = {0:N2}", MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE);
 
             SystemEvents.UserPreferenceChanged += (sender, args) => {
                 if (args.Category == UserPreferenceCategory.Desktop) {
@@ -82,8 +88,10 @@ namespace WindowSizeGuard {
             }
         }
 
-        private void onAnyWindowOpened(object sender, AutomationEventArgs e) {
-            onAnyWindowOpened(((AutomationElement) sender).toSystemWindow());
+        private void onAnyWindowOpened(object? sender, AutomationEventArgs e) {
+            if (sender != null) {
+                onAnyWindowOpened(((AutomationElement) sender).toSystemWindow());
+            }
         }
 
         private void onAnyWindowOpened(SystemWindow window) {
@@ -94,6 +102,8 @@ namespace WindowSizeGuard {
 
             var newWindowState = new ValueHolder<int>((int) window.WindowState);
             windowVisualStateCache.AddOrUpdate(window.HWnd.ToInt32(), newWindowState, (i, holder) => newWindowState);
+
+            windowOpened?.Invoke(this, window);
         }
 
         private void onToolbarResized(object sender, KoKoPropertyChangedEventArgs<bool> e) {

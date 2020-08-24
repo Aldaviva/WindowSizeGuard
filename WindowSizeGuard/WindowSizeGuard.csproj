@@ -61,12 +61,13 @@
   <ItemGroup>
     <Compile Include="AutofacHelpers.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="GitExtensionsHandler.cs" />
+    <Compile Include="ProgramHandlers\GitExtensionsHandler.cs" />
     <Compile Include="HotkeyHandler.cs" />
-    <Compile Include="Main.cs" />
+    <Compile Include="MainClass.cs" />
+    <Compile Include="ProgramHandlers\MicrosoftManagementConsoleHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarAwareSizeGuard.cs" />
-    <Compile Include="VivaldiHandler.cs" />
+    <Compile Include="ProgramHandlers\VivaldiHandler.cs" />
     <Compile Include="WindowResizer.cs" />
     <Compile Include="WindowZoneManager.cs" />
   </ItemGroup>
@@ -97,7 +98,10 @@
       <Version>0.3.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>4.7.3</Version>
+      <Version>4.7.4</Version>
+    </PackageReference>
+    <PackageReference Include="SimWinMouse">
+      <Version>1.0.2</Version>
     </PackageReference>
     <PackageReference Include="ThrottleDebounce">
       <Version>1.0.2</Version>
@@ -106,5 +110,6 @@
   <ItemGroup>
     <Content Include="window.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

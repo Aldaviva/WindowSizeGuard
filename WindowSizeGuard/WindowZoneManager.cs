@@ -41,18 +41,18 @@ namespace WindowSizeGuard {
 
     public struct WindowZoneSearchResult {
 
-        public Rect proportionalZoneRectangle;
-        public RECT actualZoneRectPosition;
-        public double distance;
+        public Rect       proportionalZoneRectangle;
+        public RECT       actualZoneRectPosition;
+        public double     distance;
         public WindowZone zone;
-        public int zoneRectangleIndex;
+        public int        zoneRectangleIndex;
 
     }
 
     [Component]
     public class WindowZoneManagerImpl: WindowZoneManager {
 
-        private const int RECTANGLE_DISTANCE_SAME = 1;
+        private const int RECTANGLE_DISTANCE_SAME  = 1;
         private const int RECTANGLE_DISTANCE_CLOSE = 5;
 
         private readonly WindowResizer windowResizer;
@@ -129,8 +129,8 @@ namespace WindowSizeGuard {
 
         public WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea) {
             return Enum.GetValues(typeof(WindowZone)).Cast<WindowZone>()
-                       .Select(zone => findClosestZoneRectangleToWindow(windowPosition, workingArea, zone))
-                       .MinBy(result => result.distance).First();
+                .Select(zone => findClosestZoneRectangleToWindow(windowPosition, workingArea, zone))
+                .MinBy(result => result.distance).First();
         }
 
         private WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea, WindowZone zone) {
@@ -139,9 +139,9 @@ namespace WindowSizeGuard {
             IEnumerable<WindowZoneSearchResult> windowZoneSearchResults = proportionalZoneRectangles.Select((proportionalZoneRectangle, zoneIndex) => {
                 var result = new WindowZoneSearchResult {
                     proportionalZoneRectangle = proportionalZoneRectangle,
-                    actualZoneRectPosition    = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
-                    zone                      = zone,
-                    zoneRectangleIndex        = zoneIndex
+                    actualZoneRectPosition = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
+                    zone = zone,
+                    zoneRectangleIndex = zoneIndex
                 };
                 result.distance = windowResizer.getRectangleDistance(result.actualZoneRectPosition, windowPosition);
 

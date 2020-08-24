@@ -2,7 +2,7 @@
 
 #nullable enable
 
-namespace WindowSizeGuard {
+namespace WindowSizeGuard.ProgramHandlers {
 
     public interface VivaldiHandler {
 

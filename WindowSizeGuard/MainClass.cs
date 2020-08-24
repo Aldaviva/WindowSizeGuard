@@ -4,6 +4,7 @@ using System;
 using System.Windows.Forms;
 using Autofac;
 using NLog;
+using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard {
 
@@ -19,9 +20,10 @@ namespace WindowSizeGuard {
             AppDomain.CurrentDomain.UnhandledException += (sender, args) => LOGGER.Error(args.ExceptionObject);
 
             IContainer autofacContainer = AutofacHelpers.createContainer();
-            using var scope = autofacContainer.BeginLifetimeScope();
+            using ILifetimeScope scope = autofacContainer.BeginLifetimeScope();
             scope.Resolve<ToolbarAwareSizeGuard>();
             scope.Resolve<HotkeyHandler>();
+            scope.Resolve<MicrosoftManagementConsoleHandler>();
 
             Application.Run(new ApplicationContext()); //required to make Screen.PrimaryScreen.WorkingArea return accurate values. I suspect this allows Screen.DesktopChangedCount to listen to SystemEvents.UserPreferenceChanged events.
         }
