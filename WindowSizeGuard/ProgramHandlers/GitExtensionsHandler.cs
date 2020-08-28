@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Timers;
 using System.Windows.Automation;
 using ManagedWinapi.Windows;
 using NLog;
 using ThrottleDebounce;
+using Timer = System.Timers.Timer;
 
 #nullable enable
 
@@ -87,6 +89,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             LOGGER.Trace("Found {0} commit windows, {1} of them new.", _commitWindows.Count, newWindows.Count);
 
             foreach (SystemWindow newWindow in newWindows) {
+                SpinWait.SpinUntil(() => newWindow.VisibilityFlag, 500); //commit windows are sometimes created with visibilityflag=false briefly, which prevents our automatic resizing (intentionally), so wait for up to 0.5 seconds for it to become visible before triggering callbacks
                 commitWindowOpened?.Invoke(newWindow);
             }
         }

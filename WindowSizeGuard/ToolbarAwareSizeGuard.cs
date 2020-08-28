@@ -97,7 +97,10 @@ namespace WindowSizeGuard {
         private void onAnyWindowOpened(SystemWindow window) {
             LOGGER.Debug("Window opened: {0} ({1})", window.Title, window.ClassName);
             if (windowResizer.canWindowBeAutomaticallyResized(window)) {
+                LOGGER.Trace("Automatically resizing new window {0}", window.Title);
                 resizeWindowIfNecessary(window);
+            } else if(LOGGER.IsTraceEnabled) {
+                LOGGER.Trace("Window {0} was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3}", window.Title, window.Resizable, window.VisibilityFlag, window.WindowState);
             }
 
             var newWindowState = new ValueHolder<int>((int) window.WindowState);

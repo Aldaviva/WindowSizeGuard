@@ -31,7 +31,7 @@ namespace WindowSizeGuard.ProgramHandlers {
         public void onWindowOpened(object? sender, AutomationEventArgs automationEventArgs) {
             SystemWindow? window = (sender as AutomationElement)?.toSystemWindow();
 
-            if (window != null && isForegroundMicrosoftManagementConsoleWindow(window)) {
+            if (window != null && isForegroundMmcWindow(window)) {
                 RECT actionPaneRectangle = getActionPaneRectangleFromMmcWindow(window);
 
                 if (shouldResizeActionPane(actionPaneRectangle)) {
@@ -40,7 +40,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             }
         }
 
-        private static bool isForegroundMicrosoftManagementConsoleWindow(SystemWindow window) {
+        private static bool isForegroundMmcWindow(SystemWindow window) {
             return window.ClassName == MMC_CLASS_NAME && SystemWindow.ForegroundWindow == window;
         }
 
