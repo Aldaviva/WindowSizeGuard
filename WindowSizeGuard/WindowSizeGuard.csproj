@@ -69,6 +69,7 @@
     <Compile Include="ToolbarAwareSizeGuard.cs" />
     <Compile Include="ProgramHandlers\VivaldiHandler.cs" />
     <Compile Include="WindowResizer.cs" />
+    <Compile Include="WindowSelector.cs" />
     <Compile Include="WindowZoneManager.cs" />
   </ItemGroup>
   <ItemGroup>
