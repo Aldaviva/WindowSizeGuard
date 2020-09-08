@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="AutofacHelpers.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="ProgramHandlers\ExplorerDesktopHandler.cs" />
     <Compile Include="ProgramHandlers\GitExtensionsHandler.cs" />
     <Compile Include="HotkeyHandler.cs" />
     <Compile Include="MainClass.cs" />
@@ -111,6 +112,5 @@
   <ItemGroup>
     <Content Include="window.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

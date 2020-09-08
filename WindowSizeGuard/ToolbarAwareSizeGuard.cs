@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Forms;
 using KoKo.Events;
@@ -23,6 +24,9 @@ namespace WindowSizeGuard {
         delegate void OnWindowOpened(object sender, SystemWindow window);
         event OnWindowOpened? windowOpened;
 
+        delegate void OnToolbarVisibilityChanged(object sender, bool isToolbarVisible);
+        event OnToolbarVisibilityChanged? onToolbarVisibilityChanged;
+
     }
 
     [Component]
@@ -30,22 +34,23 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private const int ESTIMATED_TOOLBAR_HEIGHT = 25;
+        private const int ESTIMATED_TOOLBAR_HEIGHT  = 25;
         private const int HORIZONTAL_EDGE_TOLERANCE = 3;
-        private const int VERTICAL_EDGE_TOLERANCE = 16;
+        private const int VERTICAL_EDGE_TOLERANCE   = 16;
 
         private static readonly double MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE =
             Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
 
-        private readonly WindowResizer windowResizer;
-        private readonly WindowZoneManager windowZoneManager;
-        private readonly VivaldiHandler vivaldiHandler;
+        private readonly WindowResizer        windowResizer;
+        private readonly WindowZoneManager    windowZoneManager;
+        private readonly VivaldiHandler       vivaldiHandler;
         private readonly GitExtensionsHandler gitExtensionsHandler;
 
-        private readonly ManuallyRecalculatedProperty<Rectangle> workingArea = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
+        private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = new ConcurrentDictionary<int, ValueHolder<int>>();
 
         public event ToolbarAwareSizeGuard.OnWindowOpened? windowOpened;
+        public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? onToolbarVisibilityChanged;
 
         public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
             this.windowResizer = windowResizer;
@@ -61,6 +66,7 @@ namespace WindowSizeGuard {
 
             Property<bool> isToolbarVisible = DerivedProperty<bool>.Create(workingArea, rect => rect.Top != 0);
             isToolbarVisible.PropertyChanged += onToolbarResized;
+            isToolbarVisible.PropertyChanged += (sender, args) => onToolbarVisibilityChanged?.Invoke(this, args.NewValue);
 
             Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onAnyWindowOpened);
             Automation.AddAutomationPropertyChangedEventHandler(AutomationElement.RootElement, TreeScope.Children, onAnyWindowRestored, WindowPattern.WindowVisualStateProperty);
@@ -99,8 +105,9 @@ namespace WindowSizeGuard {
             if (windowResizer.canWindowBeAutomaticallyResized(window)) {
                 LOGGER.Trace("Automatically resizing new window {0}", window.Title);
                 resizeWindowIfNecessary(window);
-            } else if(LOGGER.IsTraceEnabled) {
-                LOGGER.Trace("Window {0} was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3}", window.Title, window.Resizable, window.VisibilityFlag, window.WindowState);
+            } else if (LOGGER.IsTraceEnabled) {
+                LOGGER.Trace("Window {0} was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3}", window.Title, window.Resizable, window.VisibilityFlag,
+                    window.WindowState);
             }
 
             var newWindowState = new ValueHolder<int>((int) window.WindowState);
