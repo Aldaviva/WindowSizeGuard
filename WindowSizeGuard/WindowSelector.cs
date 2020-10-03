@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using ManagedWinapi.Windows;
 
@@ -40,10 +41,15 @@ namespace WindowSizeGuard {
             }
         }
 
-        public bool matches(SystemWindow window) =>
-            (className?.Equals(window.ClassName) ?? true) &&
-            (titlePattern?.IsMatch(window.Title) ?? true) &&
-            (executableBaseNameWithoutExeExtension?.Equals(window.Process.ProcessName) ?? true);
+        public bool matches(SystemWindow window) {
+            try {
+                return (className?.Equals(window.ClassName) ?? true) &&
+                    (titlePattern?.IsMatch(window.Title) ?? true) &&
+                    (executableBaseNameWithoutExeExtension?.Equals(window.Process.ProcessName) ?? true);
+            } catch (Win32Exception) {
+                return false;
+            }
+        }
 
     }
 

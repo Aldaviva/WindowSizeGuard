@@ -36,7 +36,7 @@ namespace WindowSizeGuard.ProgramHandlers {
         private SystemWindow? desktopIconsWindow;
 
         public ExplorerDesktopHandlerImpl(ToolbarAwareSizeGuard toolbarAwareSizeGuard) {
-            toolbarAwareSizeGuard.onToolbarVisibilityChanged += onToolbarVisibilityChanged;
+            toolbarAwareSizeGuard.toolbarVisibilityChanged += toolbarVisibilityChanged;
 
             desktopIconsWindow = findDesktopIconsWindow();
 
@@ -72,7 +72,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             }
         }
 
-        private void onToolbarVisibilityChanged(bool isToolbarVisible) {
+        private void toolbarVisibilityChanged(bool isToolbarVisible) {
             LOGGER.Debug("Toolbar visibility changed.");
             desktopIconsCounterTimer.Enabled = false;
             /* I think Windows has a global timer on keyboard shortcuts. If you try to send F5 to Explorer, Windows or Explorer

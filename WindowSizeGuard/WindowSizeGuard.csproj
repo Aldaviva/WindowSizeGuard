@@ -73,6 +73,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolbarAwareSizeGuard.cs" />
     <Compile Include="ProgramHandlers\VivaldiHandler.cs" />
+    <Compile Include="WindowOpeningListener.cs" />
     <Compile Include="WindowResizer.cs" />
     <Compile Include="WindowSelector.cs" />
     <Compile Include="WindowZoneManager.cs" />

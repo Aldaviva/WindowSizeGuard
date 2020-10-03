@@ -21,11 +21,8 @@ namespace WindowSizeGuard {
 
     public interface ToolbarAwareSizeGuard {
 
-        delegate void OnWindowOpened(SystemWindow window);
-        event OnWindowOpened? windowOpened;
-
         delegate void OnToolbarVisibilityChanged(bool isToolbarVisible);
-        event OnToolbarVisibilityChanged? onToolbarVisibilityChanged;
+        event OnToolbarVisibilityChanged? toolbarVisibilityChanged;
 
     }
 
@@ -37,28 +34,27 @@ namespace WindowSizeGuard {
         private const int ESTIMATED_TOOLBAR_HEIGHT  = 25;
         private const int HORIZONTAL_EDGE_TOLERANCE = 3;
         private const int VERTICAL_EDGE_TOLERANCE   = 16;
-        private const int HSHELL_WINDOWCREATED      = 1;
 
         private static readonly double MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE =
             Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
 
-        private readonly WindowResizer        windowResizer;
-        private readonly WindowZoneManager    windowZoneManager;
-        private readonly VivaldiHandler       vivaldiHandler;
-        private readonly GitExtensionsHandler gitExtensionsHandler;
+        private readonly WindowResizer         windowResizer;
+        private readonly WindowZoneManager     windowZoneManager;
+        private readonly VivaldiHandler        vivaldiHandler;
+        private readonly GitExtensionsHandler  gitExtensionsHandler;
+        private readonly WindowOpeningListener windowOpeningListener;
 
         private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = new ConcurrentDictionary<int, ValueHolder<int>>();
-        private readonly ShellHook                                   shellHook;
 
-        public event ToolbarAwareSizeGuard.OnWindowOpened? windowOpened;
-        public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? onToolbarVisibilityChanged;
+        public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? toolbarVisibilityChanged;
 
-        public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler) {
-            this.windowResizer        = windowResizer;
-            this.windowZoneManager    = windowZoneManager;
-            this.vivaldiHandler       = vivaldiHandler;
-            this.gitExtensionsHandler = gitExtensionsHandler;
+        public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler, WindowOpeningListener windowOpeningListener) {
+            this.windowResizer         = windowResizer;
+            this.windowZoneManager     = windowZoneManager;
+            this.vivaldiHandler        = vivaldiHandler;
+            this.gitExtensionsHandler  = gitExtensionsHandler;
+            this.windowOpeningListener = windowOpeningListener;
 
             SystemEvents.UserPreferenceChanged += (sender, args) => {
                 if (args.Category == UserPreferenceCategory.Desktop) {
@@ -68,14 +64,9 @@ namespace WindowSizeGuard {
 
             Property<bool> isToolbarVisible = DerivedProperty<bool>.Create(workingArea, rect => rect.Top != 0);
             isToolbarVisible.PropertyChanged += onToolbarResized;
-            isToolbarVisible.PropertyChanged += (sender, args) => onToolbarVisibilityChanged?.Invoke(args.NewValue);
+            isToolbarVisible.PropertyChanged += (sender, args) => toolbarVisibilityChanged?.Invoke(args.NewValue);
 
-            shellHook = new ShellHookImpl();
-            shellHook.shellEvent += (sender, args) => {
-                if (args.shellEvent == ShellEventArgs.ShellEvent.HSHELL_WINDOWCREATED) {
-                    onAnyWindowOpened(new SystemWindow(args.windowHandle));
-                }
-            };
+            windowOpeningListener.windowOpened += onAnyWindowOpened;
 
             Automation.AddAutomationPropertyChangedEventHandler(AutomationElement.RootElement, TreeScope.Children, onAnyWindowRestored, WindowPattern.WindowVisualStateProperty);
 
@@ -117,8 +108,6 @@ namespace WindowSizeGuard {
 
             var newWindowState = new ValueHolder<int>((int) window.WindowState);
             windowVisualStateCache.AddOrUpdate(window.HWnd.ToInt32(), newWindowState, (i, holder) => newWindowState);
-
-            windowOpened?.Invoke(window);
         }
 
         private void onToolbarResized(object sender, KoKoPropertyChangedEventArgs<bool> e) {
@@ -163,7 +152,6 @@ namespace WindowSizeGuard {
 
         public void Dispose() {
             Automation.RemoveAutomationPropertyChangedEventHandler(AutomationElement.RootElement, onAnyWindowRestored);
-            shellHook.Dispose();
         }
 
         private static V exchangeEnumInConcurrentDictionary<K, V>(ConcurrentDictionary<K, ValueHolder<int>> dictionary, K key, V newValue) where V: Enum {

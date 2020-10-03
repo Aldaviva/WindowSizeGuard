@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
@@ -19,8 +20,8 @@ namespace WindowSizeGuard.ProgramHandlers {
         private const int    RESIZER_BAR_OFFSET        = 2;
         private const string MMC_CLASS_NAME            = "MMCMainFrame";
 
-        public MicrosoftManagementConsoleHandlerImpl(ToolbarAwareSizeGuard toolbarAwareSizeGuard) {
-            toolbarAwareSizeGuard.windowOpened += onWindowOpened;
+        public MicrosoftManagementConsoleHandlerImpl(WindowOpeningListener windowOpeningListener) {
+            windowOpeningListener.windowOpened += onWindowOpened;
         }
 
         private static void onWindowOpened(SystemWindow window) {
@@ -34,7 +35,11 @@ namespace WindowSizeGuard.ProgramHandlers {
         }
 
         private static bool isForegroundMmcWindow(SystemWindow window) {
-            return window.ClassName == MMC_CLASS_NAME && SystemWindow.ForegroundWindow == window;
+            try {
+                return window.ClassName == MMC_CLASS_NAME && SystemWindow.ForegroundWindow == window;
+            } catch (Win32Exception) {
+                return false;
+            }
         }
 
         private static RECT getActionPaneRectangleFromMmcWindow(SystemWindow window) {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Timers;
@@ -37,7 +38,7 @@ namespace WindowSizeGuard.ProgramHandlers {
 
         private ISet<SystemWindow> _commitWindows = new HashSet<SystemWindow>();
 
-        public GitExtensionsHandlerImpl() {
+        public GitExtensionsHandlerImpl(WindowOpeningListener windowOpeningListener) {
             _onWindowClosedThrottled = Throttler.Throttle((bool firstRun) =>
                 onWindowClosed(firstRun), TimeSpan.FromSeconds(2));
 
@@ -48,7 +49,7 @@ namespace WindowSizeGuard.ProgramHandlers {
 
             timer.Elapsed += findCommitWindows;
 
-            Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onWindowOpened);
+            windowOpeningListener.windowOpened += onWindowOpened;
             Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, AutomationElement.RootElement, TreeScope.Subtree, onWindowClosedThrottled);
 
             _onWindowClosedThrottled.Run(true);
@@ -56,8 +57,8 @@ namespace WindowSizeGuard.ProgramHandlers {
             LOGGER.Trace("Waiting for Git Extensions commit window");
         }
 
-        private void onWindowOpened(object? sender, AutomationEventArgs? e = null) {
-            if (!timer.Enabled && sender != null && isGitExtensionsMainWindow(((AutomationElement) sender).toSystemWindow())) {
+        private void onWindowOpened(SystemWindow window) {
+            if (!timer.Enabled && isGitExtensionsMainWindow(window)) {
                 timer.Enabled = true;
             }
 
@@ -75,7 +76,13 @@ namespace WindowSizeGuard.ProgramHandlers {
             }
         }
 
-        private static bool isGitExtensionsMainWindow(SystemWindow window) => window.Title.EndsWith(" - Git Extensions");
+        private static bool isGitExtensionsMainWindow(SystemWindow window) {
+            try {
+                return window.Title.EndsWith(" - Git Extensions");
+            } catch (Win32Exception) {
+                return false;
+            }
+        }
 
         private void findCommitWindows(object? sender = null, ElapsedEventArgs? elapsedEventArgs = null) {
             ISet<SystemWindow> foundWindows = new HashSet<SystemWindow>(SystemWindow.FilterToplevelWindows(window =>
@@ -95,7 +102,6 @@ namespace WindowSizeGuard.ProgramHandlers {
         }
 
         public void Dispose() {
-            Automation.RemoveAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, onWindowOpened);
             Automation.RemoveAutomationEventHandler(WindowPattern.WindowClosedEvent, AutomationElement.RootElement, onWindowClosedThrottled);
 
             timer.Stop();
