@@ -1,4 +1,5 @@
-﻿using ManagedWinapi.Windows;
+﻿using System.Text.RegularExpressions;
+using ManagedWinapi.Windows;
 
 #nullable enable
 
@@ -6,16 +7,16 @@ namespace WindowSizeGuard.ProgramHandlers {
 
     public interface VivaldiHandler {
 
-        bool isWindowVivaldi(SystemWindow window);
-
         void fixVivaldiResizeBug(SystemWindow window);
+
+        WindowSelector windowSelector { get; }
 
     }
 
     [Component]
     public class VivaldiHandlerImpl: VivaldiHandler {
 
-        public bool isWindowVivaldi(SystemWindow window) => window.ClassName == "Chrome_WidgetWin_1" && window.Process.ProcessName == "vivaldi";
+        public WindowSelector windowSelector { get; } = new WindowSelector(className: "Chrome_WidgetWin_1", title: new Regex(@" - Vivaldi$")); //Vivaldi, but not the detached DevTools windows whose titles don't end with - Vivaldi
 
         public void fixVivaldiResizeBug(SystemWindow window) {
             RECT windowSize = window.Position;
@@ -23,6 +24,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             windowSize.Bottom++;
             window.Position = windowSize;
         }
+
 
     }
 

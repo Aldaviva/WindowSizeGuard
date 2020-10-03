@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using ManagedWinapi.Windows;
 
 #nullable enable
 
 namespace WindowSizeGuard {
 
-    internal readonly struct WindowSelector {
+    public readonly struct WindowSelector {
 
         public readonly string? executableBaseNameWithoutExeExtension;
         public readonly string? className;
@@ -20,6 +21,8 @@ namespace WindowSizeGuard {
         private WindowSelector(string? executableBaseName, string? className, string? title, Regex? titlePattern) {
             if (titlePattern != null && title != null) {
                 throw new ArgumentException("Please specify at most 1 of the titlePattern and title arguments, not both.");
+            } else if (executableBaseName == null && className == null && title == null && titlePattern == null) {
+                throw new ArgumentException("Must specify at least 1 of the executableBaseName, className, title, and titlePattern arguments, not zero.");
             }
 
             this.className = className;
@@ -36,6 +39,11 @@ namespace WindowSizeGuard {
                 this.titlePattern = null;
             }
         }
+
+        public bool matches(SystemWindow window) =>
+            (className?.Equals(window.ClassName) ?? true) &&
+            (titlePattern?.IsMatch(window.Title) ?? true) &&
+            (executableBaseNameWithoutExeExtension?.Equals(window.Process.ProcessName) ?? true);
 
     }
 

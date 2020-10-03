@@ -72,14 +72,13 @@ namespace WindowSizeGuard.ProgramHandlers {
             }
         }
 
-        private void onToolbarVisibilityChanged(object sender, bool isToolbarVisible) {
+        private void onToolbarVisibilityChanged(bool isToolbarVisible) {
             LOGGER.Debug("Toolbar visibility changed.");
             desktopIconsCounterTimer.Enabled = false;
-            /* XXX I think Windows has a global timer on keyboard shortcuts. If you try to send F5 to Explorer, Windows or Explorer
+            /* I think Windows has a global timer on keyboard shortcuts. If you try to send F5 to Explorer, Windows or Explorer
              * will ignore it because it is already in the middle of processing Ctrl+Alt+W to toggle the Winamp toolbar, and Windows
              * will only handle one keyboard shortcut at a time. To work around this, wait until the Ctrl+Alt+W shortcut is done being
              * handled, then try to inject F5 into Explorer.
-             * I may be able to remove the separate process forking too, if it really is just a timing problem.
              */
 
             int oldDesktopIconCount = desktopIconsCount;
@@ -92,9 +91,10 @@ namespace WindowSizeGuard.ProgramHandlers {
                  * The number of desktop icons changed between when we last checked and when the toolbar was toggled, so a deleted file probably reappeared.
                  * Try aggressively to F5 Explorer every 50ms until the number of icons changes again or 2 seconds pass.
                  */
-                Stopwatch totalRetryDuration = Stopwatch.StartNew();
 
                 task = Task.Run(async () => {
+                    Stopwatch totalRetryDuration = Stopwatch.StartNew();
+
                     for (int attempts = 1; totalRetryDuration.Elapsed < MAX_REFRESH_RETRY_DURATION; attempts++) {
                         refreshDesktop();
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
@@ -11,26 +10,20 @@ using SimWinInput;
 
 namespace WindowSizeGuard.ProgramHandlers {
 
-    public interface MicrosoftManagementConsoleHandler {
-
-        void onWindowOpened(object? sender, AutomationEventArgs automationEventArgs);
-
-    }
+    public interface MicrosoftManagementConsoleHandler { }
 
     [Component]
-    public class MicrosoftManagementConsoleHandlerImpl: MicrosoftManagementConsoleHandler, IDisposable {
+    public class MicrosoftManagementConsoleHandlerImpl: MicrosoftManagementConsoleHandler {
 
         private const int    DESIRED_ACTION_PANE_WIDTH = 185;
         private const int    RESIZER_BAR_OFFSET        = 2;
         private const string MMC_CLASS_NAME            = "MMCMainFrame";
 
-        public MicrosoftManagementConsoleHandlerImpl() {
-            Automation.AddAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, TreeScope.Children, onWindowOpened);
+        public MicrosoftManagementConsoleHandlerImpl(ToolbarAwareSizeGuard toolbarAwareSizeGuard) {
+            toolbarAwareSizeGuard.windowOpened += onWindowOpened;
         }
 
-        public void onWindowOpened(object? sender, AutomationEventArgs automationEventArgs) {
-            SystemWindow? window = (sender as AutomationElement)?.toSystemWindow();
-
+        private static void onWindowOpened(SystemWindow window) {
             if (window != null && isForegroundMmcWindow(window)) {
                 RECT actionPaneRectangle = getActionPaneRectangleFromMmcWindow(window);
 
@@ -61,7 +54,7 @@ namespace WindowSizeGuard.ProgramHandlers {
 
         private static void resizeActionPane(RECT actionPaneAbsolutePosition, int width) {
             Point originalCursorPosition = Cursor.Position;
-            int dragYPosition = (int) new[] { actionPaneAbsolutePosition.Top, actionPaneAbsolutePosition.Bottom }.Average();
+            int   dragYPosition          = (int) new[] { actionPaneAbsolutePosition.Top, actionPaneAbsolutePosition.Bottom }.Average();
 
             SimMouse.Act(SimMouse.Action.LeftButtonDown, actionPaneAbsolutePosition.Left - RESIZER_BAR_OFFSET, dragYPosition);
 
@@ -69,10 +62,6 @@ namespace WindowSizeGuard.ProgramHandlers {
             SimMouse.Act(SimMouse.Action.LeftButtonUp, actionPaneAbsolutePosition.Left - RESIZER_BAR_OFFSET + actionPaneAbsolutePosition.Width - width, dragYPosition);
 
             Cursor.Position = originalCursorPosition;
-        }
-
-        public void Dispose() {
-            Automation.RemoveAutomationEventHandler(WindowPattern.WindowOpenedEvent, AutomationElement.RootElement, onWindowOpened);
         }
 
     }
