@@ -130,7 +130,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             LOGGER.Debug($"Posting F5 to {desktopIconsWindow.HWnd.ToInt64():X}...");
 
             int keyDownResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYDOWN, F5, F5_DOWN);
-            Thread.Sleep(10);
+            Thread.Sleep(30);
             int keyUpResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYUP, F5, F5_UP);
 
             bool success = keyDownResult > 0 && keyUpResult > 0;
