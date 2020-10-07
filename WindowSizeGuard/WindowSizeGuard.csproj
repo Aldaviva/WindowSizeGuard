@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutofacHelpers.cs" />
+    <Compile Include="ConcurrentDictionaryExtensions.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ShellHook.cs">
       <SubType>Form</SubType>
