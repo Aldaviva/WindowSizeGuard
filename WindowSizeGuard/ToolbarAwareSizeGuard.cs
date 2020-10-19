@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Forms;
 using KoKo.Events;
@@ -92,20 +92,20 @@ namespace WindowSizeGuard {
         }
 
         private void onAnyWindowOpened(SystemWindow window) {
-            if (LOGGER.IsTraceEnabled) {
-                LOGGER.Trace("Window opened: {0} ({1})", window.Title, window.ClassName);
-            }
+            try {
+                if (windowResizer.canWindowBeAutomaticallyResized(window)) {
+                    LOGGER.Trace("Attempting to resize new window {0} ({1})", window.Title, window.ClassName);
+                    resizeWindowIfNecessary(window);
+                } else if (LOGGER.IsTraceEnabled) {
+                    LOGGER.Trace("Window {0} ({4}) was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3})", window.Title, window.Resizable,
+                        window.VisibilityFlag, window.WindowState, window.ClassName);
+                }
 
-            if (windowResizer.canWindowBeAutomaticallyResized(window)) {
-                LOGGER.Trace("Automatically resizing new window {0}", window.Title);
-                resizeWindowIfNecessary(window);
-            } else if (LOGGER.IsTraceEnabled) {
-                LOGGER.Trace("Window {0} ({4}) was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3})", window.Title, window.Resizable,
-                    window.VisibilityFlag, window.WindowState, window.ClassName);
+                var newWindowState = new ValueHolder<int>((int) window.WindowState);
+                windowVisualStateCache[window.HWnd.ToInt32()] = newWindowState;
+            } catch (Win32Exception) {
+                //window was closed, do nothing
             }
-
-            var newWindowState = new ValueHolder<int>((int) window.WindowState);
-            windowVisualStateCache[window.HWnd.ToInt32()] = newWindowState;
         }
 
         private void onToolbarResized(object sender, KoKoPropertyChangedEventArgs<bool> e) {

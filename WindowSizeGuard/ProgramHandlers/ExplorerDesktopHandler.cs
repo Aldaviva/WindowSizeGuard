@@ -42,11 +42,11 @@ namespace WindowSizeGuard.ProgramHandlers {
 
             desktopIconsCounterTimer = new Timer {
                 AutoReset = true,
-                Interval = COUNT_DESKTOP_ICONS_INTERVAL.TotalMilliseconds,
-                Enabled = true
+                Interval  = COUNT_DESKTOP_ICONS_INTERVAL.TotalMilliseconds,
+                Enabled   = true
             };
             desktopIconsCounterTimer.Elapsed += (sender, args) => desktopIconsCount = countDesktopIcons();
-            desktopIconsCount = countDesktopIcons();
+            desktopIconsCount                =  countDesktopIcons();
         }
 
         private static SystemWindow? findDesktopIconsWindow() {
@@ -119,7 +119,7 @@ namespace WindowSizeGuard.ProgramHandlers {
             }
 
             task.ContinueWith(task1 => {
-                desktopIconsCount = countDesktopIcons();
+                desktopIconsCount                = countDesktopIcons();
                 desktopIconsCounterTimer.Enabled = true;
             });
         }
@@ -129,11 +129,11 @@ namespace WindowSizeGuard.ProgramHandlers {
 
             LOGGER.Debug($"Posting F5 to {desktopIconsWindow.HWnd.ToInt64():X}...");
 
-            int keyDownResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYDOWN, F5, F5_DOWN);
+            bool keyDownResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYDOWN, new IntPtr(F5), new IntPtr(F5_DOWN));
             Thread.Sleep(30);
-            int keyUpResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYUP, F5, F5_UP);
+            bool keyUpResult = PostMessage(desktopIconsWindow.HWnd, WM_KEYUP, new IntPtr(F5), new IntPtr(F5_UP));
 
-            bool success = keyDownResult > 0 && keyUpResult > 0;
+            bool success = keyDownResult && keyUpResult;
             if (!success) {
                 LOGGER.Warn($"Failed to post WM_KEYUP or WM_KEYDOWN to Explorer window (results =  keyDown: {keyDownResult}, keyUp: {keyUpResult})");
             }
@@ -141,8 +141,9 @@ namespace WindowSizeGuard.ProgramHandlers {
             return success;
         }
 
-        [DllImport("User32.dll")]
-        private static extern int PostMessage(IntPtr hwnd, int msg, int wParam, long lParam);
+        [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         public void Dispose() {
             desktopIconsCounterTimer.Dispose();

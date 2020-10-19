@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ManagedWinapi.Windows;
+using NLog;
 
 #nullable enable
 
@@ -16,15 +17,26 @@ namespace WindowSizeGuard.ProgramHandlers {
     [Component]
     public class VivaldiHandlerImpl: VivaldiHandler {
 
-        public WindowSelector windowSelector { get; } = new WindowSelector(className: "Chrome_WidgetWin_1", title: new Regex(@" - Vivaldi$")); //Vivaldi, but not the detached DevTools windows whose titles don't end with - Vivaldi
+        private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
+
+        private const int MAX_RESIZE_ATTEMPTS = 10; //usually only 1 or 2 attempts are needed
+
+        //Vivaldi main windows, Settings window, and PiP video window, but not the detached DevTools windows
+        public WindowSelector windowSelector { get; } = new WindowSelector(className: "Chrome_WidgetWin_1", title: new Regex(@"(?: - Vivaldi$)|(?:^Picture in picture$)"));
 
         public void fixVivaldiResizeBug(SystemWindow window) {
-            RECT windowSize = window.Position;
-            windowSize.Right++;
-            windowSize.Bottom++;
-            window.Position = windowSize;
-        }
+            RECT oldSize     = window.Position;
+            RECT desiredSize = oldSize;
+            desiredSize.Right++;
+            desiredSize.Bottom++;
 
+            // For some reason, it takes two attempts to resize the PiP video window if a main Vivaldi window is also open and not minimized. If Vivaldi is minimized, the PiP window can be
+            // resized on the first attempt.
+            for (int attempts = 0; !window.Position.Equals(desiredSize) && attempts < MAX_RESIZE_ATTEMPTS; attempts++) {
+                window.Position = desiredSize;
+                LOGGER.Trace($"Resized Vivaldi window {window.Title} from ({oldSize.Width}px × {oldSize.Height}px) to ({desiredSize.Width}px × {desiredSize.Height}px)");
+            }
+        }
 
     }
 
