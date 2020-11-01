@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Forms;
 using KoKo.Events;
@@ -30,19 +31,20 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private const int ESTIMATED_TOOLBAR_HEIGHT  = 25;
-        private const int HORIZONTAL_EDGE_TOLERANCE = 3;
-        private const int VERTICAL_EDGE_TOLERANCE   = 16;
+        private const int ESTIMATED_TOOLBAR_HEIGHT          = 25;
+        private const int HORIZONTAL_EDGE_TOLERANCE         = 3;
+        private const int VERTICAL_EDGE_TOLERANCE           = 16;
+        private const int MAX_WINDOW_OPENED_RESIZE_ATTEMPTS = 20;
 
         private static readonly double MAX_RECTANGLE_DISTANCE_TO_AUTOMATICALLY_RESIZE =
             Math.Sqrt(2 * (Math.Pow(ESTIMATED_TOOLBAR_HEIGHT + VERTICAL_EDGE_TOLERANCE, 2) + Math.Pow(HORIZONTAL_EDGE_TOLERANCE, 2)));
 
-        private readonly WindowResizer                           windowResizer;
-        private readonly WindowZoneManager                       windowZoneManager;
-        private readonly VivaldiHandler                          vivaldiHandler;
-        private readonly GitExtensionsHandler                    gitExtensionsHandler;
-        private readonly ManuallyRecalculatedProperty<Rectangle> workingArea = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
+        private readonly WindowResizer        windowResizer;
+        private readonly WindowZoneManager    windowZoneManager;
+        private readonly VivaldiHandler       vivaldiHandler;
+        private readonly GitExtensionsHandler gitExtensionsHandler;
 
+        private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = ConcurrentDictionaryExtensions.createConcurrentDictionary<int, int>();
 
         public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? toolbarVisibilityChanged;
@@ -91,20 +93,25 @@ namespace WindowSizeGuard {
             }
         }
 
-        private void onAnyWindowOpened(SystemWindow window) {
-            try {
-                if (windowResizer.canWindowBeAutomaticallyResized(window)) {
-                    LOGGER.Trace("Attempting to resize new window {0} ({1})", window.Title, window.ClassName);
-                    resizeWindowIfNecessary(window);
-                } else if (LOGGER.IsTraceEnabled) {
-                    LOGGER.Trace("Window {0} ({4}) was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3})", window.Title, window.Resizable,
-                        window.VisibilityFlag, window.WindowState, window.ClassName);
+        private async void onAnyWindowOpened(SystemWindow window) {
+            bool resized = false;
+            for (int attempt = 1; !resized && (attempt < MAX_WINDOW_OPENED_RESIZE_ATTEMPTS); attempt++) {
+                try {
+                    if (windowResizer.canWindowBeAutomaticallyResized(window)) {
+                        LOGGER.Trace("Attempting to resize new window {0} ({1})", window.Title, window.ClassName);
+                        resized = resizeWindowIfNecessary(window);
+                    } else if (LOGGER.IsTraceEnabled) {
+                        LOGGER.Trace("Window {0} ({4}) was opened but it can't be automatically resized (resizable = {1}, visibility = {2}, state = {3})", window.Title, window.Resizable,
+                            window.VisibilityFlag, window.WindowState, window.ClassName);
+                    }
+
+                    var newWindowState = new ValueHolder<int>((int) window.WindowState);
+                    windowVisualStateCache[window.HWnd.ToInt32()] = newWindowState;
+                } catch (Win32Exception) {
+                    //window was closed, do nothing
                 }
 
-                var newWindowState = new ValueHolder<int>((int) window.WindowState);
-                windowVisualStateCache[window.HWnd.ToInt32()] = newWindowState;
-            } catch (Win32Exception) {
-                //window was closed, do nothing
+                await Task.Delay(100);
             }
         }
 

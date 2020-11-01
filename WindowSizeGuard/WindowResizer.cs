@@ -65,7 +65,8 @@ namespace WindowSizeGuard {
             new WindowSelector(title: "TagScanner"),                                               //TagScanner
             new WindowSelector(className: "ESET Main Frame"),                                      //ESET NOD32
             new WindowSelector(className: "MozillaWindowClass"),                                   //Firefox
-            new WindowSelector(className: "VMUIFrame")                                             //VMware Workstation (affects version 16 and later)
+            new WindowSelector(className: "VMUIFrame"),                                            //VMware Workstation (affects version 16 and later)
+            new WindowSelector(title: new Regex(@"^dnSpy v"))                               //dnSpy
         };
 
         public WindowResizerImpl(VivaldiHandler vivaldiHandler) {
