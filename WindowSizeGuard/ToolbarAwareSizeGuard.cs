@@ -44,7 +44,7 @@ namespace WindowSizeGuard {
         private readonly VivaldiHandler       vivaldiHandler;
         private readonly GitExtensionsHandler gitExtensionsHandler;
 
-        private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new ManuallyRecalculatedProperty<Rectangle>(() => Screen.PrimaryScreen.WorkingArea);
+        private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new(() => Screen.PrimaryScreen.WorkingArea);
         private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = ConcurrentDictionaryExtensions.createConcurrentDictionary<int, int>();
 
         public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? toolbarVisibilityChanged;
@@ -95,7 +95,7 @@ namespace WindowSizeGuard {
 
         private async void onAnyWindowOpened(SystemWindow window) {
             bool resized = false;
-            for (int attempt = 1; !resized && (attempt < MAX_WINDOW_OPENED_RESIZE_ATTEMPTS); attempt++) {
+            for (int attempt = 1; !resized && attempt < MAX_WINDOW_OPENED_RESIZE_ATTEMPTS; attempt++) {
                 try {
                     if (windowResizer.canWindowBeAutomaticallyResized(window)) {
                         LOGGER.Trace("Attempting to resize new window {0} ({1})", window.Title, window.ClassName);

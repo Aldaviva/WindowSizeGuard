@@ -19,7 +19,7 @@ namespace WindowSizeGuard {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
-        private readonly WindowZoneManager windowZoneManager;
+        private readonly WindowZoneManager    windowZoneManager;
         private readonly IKeyboardMouseEvents globalHook;
 
         public HotkeyHandlerImpl(WindowZoneManager windowZoneManager) {
@@ -41,10 +41,10 @@ namespace WindowSizeGuard {
             e.Handled = true; //will be set back to false at the end of this method if nothing handles this key
 
             SystemWindow foregroundWindow = SystemWindow.ForegroundWindow;
-            bool isWinKeyPressed = e.isWinKeyPressed();
-            bool winPressed = isWinKeyPressed && !e.Alt && !e.Shift;
-            bool winAltPressed = isWinKeyPressed && e.Alt && !e.Shift;
-            int? rectangleInZone = e.Control ? 0 : (int?) null;
+            bool         isWinKeyPressed  = e.isWinKeyPressed();
+            bool         winPressed       = isWinKeyPressed && !e.Alt && !e.Shift;
+            bool         winAltPressed    = isWinKeyPressed && e.Alt && !e.Shift;
+            int?         rectangleInZone  = e.Control ? 0 : null;
 
             // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault we're not trying to handle every possible key
             switch (e.KeyCode) {

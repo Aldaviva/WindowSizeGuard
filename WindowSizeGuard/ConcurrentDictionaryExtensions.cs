@@ -9,7 +9,7 @@ namespace WindowSizeGuard {
     public static class ConcurrentDictionaryExtensions {
 
         public static ConcurrentDictionary<K, ValueHolder<V>> createConcurrentDictionary<K, V>() {
-            return new ConcurrentDictionary<K, ValueHolder<V>>();
+            return new();
         }
 
         public static V exchangeEnum<K, V>(this ConcurrentDictionary<K, ValueHolder<int>> dictionary, K key, V newValue) where V: Enum {

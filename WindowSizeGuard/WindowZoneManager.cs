@@ -85,8 +85,8 @@ namespace WindowSizeGuard {
             }
 
             IList<Rect> proportionalRectanglesForZone = getProportionalRectanglesForZone(zone).ToList();
-            RECT windowPadding = windowResizer.getWindowPadding(window);
-            Rect proportionalRectangleToResizeTo;
+            RECT        windowPadding                 = windowResizer.getWindowPadding(window);
+            Rect        proportionalRectangleToResizeTo;
 
             Rectangle workingArea = Screen.PrimaryScreen.WorkingArea;
 
@@ -106,8 +106,8 @@ namespace WindowSizeGuard {
             }
 
             RECT newPositionRelativeToWorkingArea = convertProportionalRectangleToActualRectangle(proportionalRectangleToResizeTo, workingArea);
-            RECT newPositionRelativeToScreen = windowResizer.getRelativePosition(newPositionRelativeToWorkingArea, workingArea.Location);
-            RECT newPositionWithPaddingRemoved = windowResizer.enlargeRectangle(newPositionRelativeToScreen, windowPadding);
+            RECT newPositionRelativeToScreen      = windowResizer.getRelativePosition(newPositionRelativeToWorkingArea, workingArea.Location);
+            RECT newPositionWithPaddingRemoved    = windowResizer.enlargeRectangle(newPositionRelativeToScreen, windowPadding);
 
             // LOGGER.Debug(
             //     $"Moving {window.Process.ProcessName} to [top={newPositionRelativeToScreen.Top}, bottom={newPositionRelativeToScreen.Bottom}, left={newPositionRelativeToScreen.Left}, right={newPositionRelativeToScreen.Right}, width={newPositionRelativeToScreen.Width}, height={newPositionRelativeToScreen.Height}], accounting for window padding of {windowPadding.toString()}");
@@ -120,7 +120,7 @@ namespace WindowSizeGuard {
         }
 
         private static RECT convertProportionalRectangleToActualRectangle(Rect proportionalRectangle, RECT actualRectangle) {
-            return new RECT((int) (actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
+            return new((int) (actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
                 (int) (actualRectangle.Height * proportionalRectangle.Top) + actualRectangle.Top,
                 (int) (actualRectangle.Width * proportionalRectangle.Right) + actualRectangle.Left,
                 (int) (actualRectangle.Height * proportionalRectangle.Bottom) + actualRectangle.Top
@@ -139,9 +139,9 @@ namespace WindowSizeGuard {
             IEnumerable<WindowZoneSearchResult> windowZoneSearchResults = proportionalZoneRectangles.Select((proportionalZoneRectangle, zoneIndex) => {
                 var result = new WindowZoneSearchResult {
                     proportionalZoneRectangle = proportionalZoneRectangle,
-                    actualZoneRectPosition = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
-                    zone = zone,
-                    zoneRectangleIndex = zoneIndex
+                    actualZoneRectPosition    = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
+                    zone                      = zone,
+                    zoneRectangleIndex        = zoneIndex
                 };
                 result.distance = windowResizer.getRectangleDistance(result.actualZoneRectPosition, windowPosition);
 

@@ -10,7 +10,7 @@ using ManagedWinapi.Windows;
 
 namespace WindowSizeGuard {
 
-    public static class Extensions {
+    public static class WindowExtensions {
 
         public static bool isWinKeyPressed(this KeyEventArgsExt _) {
             KeyboardState keyboardState = KeyboardState.GetCurrent();
@@ -18,11 +18,11 @@ namespace WindowSizeGuard {
         }
 
         public static Rect toWindowsRect(this RECT mwinapiRect) {
-            return new Rect(mwinapiRect.Left, mwinapiRect.Top, mwinapiRect.Width, mwinapiRect.Height);
+            return new(mwinapiRect.Left, mwinapiRect.Top, mwinapiRect.Width, mwinapiRect.Height);
         }
 
         public static RECT toMwinapiRect(this Rect windowsRect) {
-            return new RECT((int) windowsRect.X, (int) windowsRect.Y, (int) windowsRect.Right, (int) windowsRect.Bottom);
+            return new((int) windowsRect.X, (int) windowsRect.Y, (int) windowsRect.Right, (int) windowsRect.Bottom);
         }
 
         public static string toString(this RECT rect) {
@@ -30,7 +30,7 @@ namespace WindowSizeGuard {
         }
 
         public static SystemWindow toSystemWindow(this AutomationElement automationWindow) {
-            return new SystemWindow(new IntPtr(automationWindow.Current.NativeWindowHandle));
+            return new(new IntPtr(automationWindow.Current.NativeWindowHandle));
         }
 
     }
