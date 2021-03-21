@@ -2,12 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ManagedWinapi.Windows;
-using Microsoft.Win32;
-using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard {
 
@@ -36,54 +33,7 @@ namespace WindowSizeGuard {
     [Component]
     public class WindowResizerImpl: WindowResizer {
 
-        private const int TWIPS_PER_INCH        = 15;
-        private const int BORDER_LINE_THICKNESS = 1;
-
-        private static readonly RECT NO_PADDING = new RECT(0, 0, 0, 0);
-
-        private readonly RECT defaultPadding;
-
-        // can't find a good way to detect this programmatically, so whitelist them
-        // to blacklist a title suffix, use titlePattern: new Regex(@"^.*(?<! ‎- OneNote for Windows 10)$")
-        // these are all case-sensitive
-        private readonly ICollection<WindowSelector> windowsWithNoPadding = new List<WindowSelector> {
-            // Vivaldi will be injected into this list in the constructor below
-            new WindowSelector(className: "XLMAIN"),                                               //Excel
-            new WindowSelector(className: "OpusApp"),                                              //Word
-            new WindowSelector(className: "rctrl_renwnd32"),                                       //Outlook
-            new WindowSelector(className: "PPTFrameClass"),                                        //PowerPoint
-            new WindowSelector(executableBaseName: "devenv.exe"),                                  //Visual Studio
-            new WindowSelector(className: "Chrome_WidgetWin_1", title: "Logitech G HUB"),          //Logitech G Hub
-            new WindowSelector(className: "Chrome_WidgetWin_1", title: "Visual Studio Installer"), //Visual Studio Installer
-            new WindowSelector(className: "vguiPopupWindow"),                                      //Steam
-            new WindowSelector(title: "Epic Games Launcher"),                                      //Epic Games Launcher
-            new WindowSelector(className: "Photoshop"),                                            //Photoshop
-            new WindowSelector(className: "illustrator"),                                          //Illustrator
-            new WindowSelector(className: "indesign"),                                             //InDesign
-            new WindowSelector(className: "_macr_dreamweaver_frame_window_"),                      //Dreamweaver
-            new WindowSelector(className: "Bridge_WindowClass"),                                   //Bridge
-            new WindowSelector(title: "TagScanner"),                                               //TagScanner
-            new WindowSelector(className: "ESET Main Frame"),                                      //ESET NOD32
-            new WindowSelector(className: "MozillaWindowClass"),                                   //Firefox
-            new WindowSelector(className: "VMUIFrame"),                                            //VMware Workstation (affects version 16 and later)
-            new WindowSelector(title: new Regex(@"^dnSpy v"))                               //dnSpy
-        };
-
-        public WindowResizerImpl(VivaldiHandler vivaldiHandler) {
-            windowsWithNoPadding.Add(vivaldiHandler.windowSelector);
-
-            using RegistryKey windowMetrics = Registry.CurrentUser.OpenSubKey(@"Control Panel\Desktop\WindowMetrics")!;
-
-            int borderWidth       = Convert.ToInt32(windowMetrics.GetValue(@"BorderWidth", -15)) / -TWIPS_PER_INCH;
-            int paddedBorderWidth = Convert.ToInt32(windowMetrics.GetValue(@"PaddedBorderWidth", -60)) / -TWIPS_PER_INCH;
-            int totalPadding      = 2 + borderWidth + paddedBorderWidth;
-
-            defaultPadding = new RECT(
-                left_: totalPadding + BORDER_LINE_THICKNESS,
-                top_: BORDER_LINE_THICKNESS,
-                right_: totalPadding + BORDER_LINE_THICKNESS,
-                bottom_: totalPadding + BORDER_LINE_THICKNESS);
-        }
+        private const int BORDER_LINE_THICKNESS = 1; // thickness of the semitransparent border that Windows 10 drawns on most normal windows, like Notepad
 
         public RECT enlargeRectangle(RECT windowRectangle, RECT padding) {
             windowRectangle.Left   -= padding.Left;
@@ -102,19 +52,27 @@ namespace WindowSizeGuard {
             return enlargeRectangle(windowRectangle, negativePadding);
         }
 
-        public RECT getWindowPadding(SystemWindow window) => isWindowWithNoPadding(window) ? NO_PADDING : defaultPadding;
+        public RECT getWindowPadding(SystemWindow window) {
+            RECT positionWithPadding    = window.Rectangle;
+            RECT positionWithoutPadding = getAccuratePosition(window);
 
-        private bool isWindowWithNoPadding(SystemWindow window) {
-            return (from selector in windowsWithNoPadding
-                    where selector.matches(window)
-                    select selector).Any();
+            //custom-drawn windows (like Office, Visual Studio, Photoshop, and Vivaldi) don't have the 1px semitransparent border
+            //traditional windows (like notepad or UWP apps) get a semitransparent 1px border that we want to exclude here, because abutting windows should not show the desktop between them
+            bool isCustomDrawnWindow = positionWithPadding.Equals(positionWithoutPadding);
+            int  borderThickness     = isCustomDrawnWindow ? 0 : BORDER_LINE_THICKNESS;
+
+            return new RECT(
+                left_: positionWithoutPadding.Left - positionWithPadding.Left + borderThickness,
+                top_: positionWithPadding.Top - positionWithoutPadding.Top + borderThickness,
+                right_: positionWithPadding.Right - positionWithoutPadding.Right + borderThickness,
+                bottom_: positionWithPadding.Bottom - positionWithoutPadding.Bottom + borderThickness);
         }
 
         public void moveWindowToPosition(SystemWindow window, RECT newPosition) => window.Position = newPosition;
 
         public bool canWindowBeManuallyResized(SystemWindow window) => window.Resizable;
 
-        public bool canWindowBeAutomaticallyResized(SystemWindow window) => window.Resizable && window.VisibilityFlag && (window.WindowState == FormWindowState.Normal);
+        public bool canWindowBeAutomaticallyResized(SystemWindow window) => window.Resizable && window.VisibilityFlag && window.WindowState == FormWindowState.Normal;
 
         public IEnumerable<SystemWindow> findResizableWindows(SystemWindow? parent = null, int depth = 1) {
             if (depth <= 0) {
@@ -136,7 +94,7 @@ namespace WindowSizeGuard {
             }
         }
 
-        public RECT getRelativePosition(RECT original, POINT relativeTo) => new RECT(
+        public RECT getRelativePosition(RECT original, POINT relativeTo) => new(
             left_: original.Left - relativeTo.X,
             top_: original.Top - relativeTo.Y,
             right_: original.Right - relativeTo.X,
@@ -149,6 +107,35 @@ namespace WindowSizeGuard {
             squaredEdgeDistances += Math.Pow(a.Left - b.Left, 2);
             squaredEdgeDistances += Math.Pow(a.Right - b.Right, 2);
             return Math.Sqrt(squaredEdgeDistances);
+        }
+
+        private RECT getAccuratePosition(SystemWindow window) {
+            DwmGetWindowAttribute(window.HWnd, DwmWindowAttribute.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT extendedFrameBounds, Marshal.SizeOf<RECT>());
+            return extendedFrameBounds;
+        }
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(IntPtr windowHandle, DwmWindowAttribute dwmWindowAttribute, out RECT resultBuffer, int resultBufferSize);
+
+        private enum DwmWindowAttribute {
+
+            DWMWA_NCRENDERING_ENABLED = 1,
+            DWMWA_NCRENDERING_POLICY,
+            DWMWA_TRANSITIONS_FORCEDISABLED,
+            DWMWA_ALLOW_NCPAINT,
+            DWMWA_CAPTION_BUTTON_BOUNDS,
+            DWMWA_NONCLIENT_RTL_LAYOUT,
+            DWMWA_FORCE_ICONIC_REPRESENTATION,
+            DWMWA_FLIP3D_POLICY,
+            DWMWA_EXTENDED_FRAME_BOUNDS,
+            DWMWA_HAS_ICONIC_BITMAP,
+            DWMWA_DISALLOW_PEEK,
+            DWMWA_EXCLUDED_FROM_PEEK,
+            DWMWA_CLOAK,
+            DWMWA_CLOAKED,
+            DWMWA_FREEZE_REPRESENTATION,
+            DWMWA_LAST
+
         }
 
     }
