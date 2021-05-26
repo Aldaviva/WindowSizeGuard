@@ -19,12 +19,12 @@ namespace WindowSizeGuard {
 
             AppDomain.CurrentDomain.UnhandledException += (sender, args) => LOGGER.Error(args.ExceptionObject);
 
-            using IContainer autofacContainer = AutofacHelpers.createContainer();
-            using ILifetimeScope scope = autofacContainer.BeginLifetimeScope();
+            using IContainer     autofacContainer = AutofacHelpers.createContainer();
+            using ILifetimeScope scope            = autofacContainer.BeginLifetimeScope();
             scope.Resolve<ToolbarAwareSizeGuard>();
             scope.Resolve<HotkeyHandler>();
             scope.Resolve<MicrosoftManagementConsoleHandler>();
-            scope.Resolve<ExplorerDesktopHandler>();
+            // scope.Resolve<ExplorerDesktopHandler>();
 
             Application.Run(); //required to make Screen.PrimaryScreen.WorkingArea return accurate values. This creates a message pump which allows Screen.DesktopChangedCount to listen to SystemEvents.UserPreferenceChanged events when the program is Single-Threaded Apartment.
         }

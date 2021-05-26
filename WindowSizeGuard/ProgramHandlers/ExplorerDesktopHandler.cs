@@ -14,7 +14,11 @@ namespace WindowSizeGuard.ProgramHandlers {
 
     public interface ExplorerDesktopHandler { }
 
-    [Component]
+    /// <summary>
+    /// Underlying Windows defect should have been fixed in KB5003214 2021-05 Cumulative Update For Windows 10 Version 21H1
+    /// </summary>
+    [Obsolete]
+    // [Component]
     public class ExplorerDesktopHandlerImpl: ExplorerDesktopHandler, IDisposable {
 
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
