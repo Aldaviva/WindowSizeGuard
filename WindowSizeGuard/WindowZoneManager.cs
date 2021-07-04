@@ -97,9 +97,9 @@ namespace WindowSizeGuard {
                     findClosestZoneRectangleToWindow(windowResizer.shrinkRectangle(window.Position, windowPadding), workingArea, zone);
 
                 int zoneRectangleIndex = closestZoneRectangleToOldWindowPosition switch {
-                    var r when r.distance <= RECTANGLE_DISTANCE_SAME  => (r.zoneRectangleIndex + 1) % proportionalRectanglesForZone.Count,
-                    var r when r.distance <= RECTANGLE_DISTANCE_CLOSE => r.zoneRectangleIndex,
-                    _                                                 => 0
+                    { distance: <= RECTANGLE_DISTANCE_SAME } r  => (r.zoneRectangleIndex + 1) % proportionalRectanglesForZone.Count,
+                    { distance: <= RECTANGLE_DISTANCE_CLOSE } r => r.zoneRectangleIndex,
+                    _                                           => 0
                 };
 
                 proportionalRectangleToResizeTo = proportionalRectanglesForZone[zoneRectangleIndex];
@@ -137,7 +137,7 @@ namespace WindowSizeGuard {
             IEnumerable<Rect> proportionalZoneRectangles = getProportionalRectanglesForZone(zone);
 
             IEnumerable<WindowZoneSearchResult> windowZoneSearchResults = proportionalZoneRectangles.Select((proportionalZoneRectangle, zoneIndex) => {
-                var result = new WindowZoneSearchResult {
+                WindowZoneSearchResult result = new() {
                     proportionalZoneRectangle = proportionalZoneRectangle,
                     actualZoneRectPosition    = windowResizer.getRelativePosition(convertProportionalRectangleToActualRectangle(proportionalZoneRectangle, workingArea), workingArea.Location),
                     zone                      = zone,

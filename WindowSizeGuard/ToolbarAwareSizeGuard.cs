@@ -56,15 +56,12 @@ namespace WindowSizeGuard {
             this.vivaldiHandler       = vivaldiHandler;
             this.gitExtensionsHandler = gitExtensionsHandler;
 
-            SystemEvents.UserPreferenceChanged += (sender, args) => {
-                if (args.Category == UserPreferenceCategory.Desktop) {
-                    workingArea.Recalculate();
-                }
-            };
+            SystemEvents.UserPreferenceChanged  += onUserPreferencesChanged;
+            SystemEvents.DisplaySettingsChanged += onDisplaySettingsChanged;
 
             Property<bool> isToolbarVisible = DerivedProperty<bool>.Create(workingArea, rect => rect.Top != 0);
             isToolbarVisible.PropertyChanged += onToolbarResized;
-            isToolbarVisible.PropertyChanged += (sender, args) => toolbarVisibilityChanged?.Invoke(args.NewValue);
+            isToolbarVisible.PropertyChanged += (_, args) => toolbarVisibilityChanged?.Invoke(args.NewValue);
 
             windowOpeningListener.windowOpened += onAnyWindowOpened;
 
@@ -77,13 +74,29 @@ namespace WindowSizeGuard {
             }
         }
 
+        /// <summary>
+        /// This event is fired when a desktop toolbar, like Winamp, is shown or hidden, or when the taskbar is repositioned.
+        /// </summary>
+        private void onUserPreferencesChanged(object sender, UserPreferenceChangedEventArgs args) {
+            if (args.Category == UserPreferenceCategory.Desktop) {
+                workingArea.Recalculate();
+            }
+        }
+
+        /// <summary>
+        /// This event is fired when the screen resolution changes.
+        /// </summary>
+        private void onDisplaySettingsChanged(object sender, EventArgs e) {
+            workingArea.Recalculate();
+        }
+
         private void onAnyWindowRestored(object? sender, AutomationPropertyChangedEventArgs e) {
             if (sender == null) {
                 return;
             }
 
-            int windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
-            var window       = new SystemWindow(new IntPtr(windowHandle));
+            int          windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
+            SystemWindow window       = new(new IntPtr(windowHandle));
 
             FormWindowState newWindowState = window.WindowState;
             FormWindowState oldWindowState = windowVisualStateCache.exchangeEnum(windowHandle, newWindowState);
@@ -116,7 +129,7 @@ namespace WindowSizeGuard {
         }
 
         private void onToolbarResized(object sender, KoKoPropertyChangedEventArgs<bool> e) {
-            var stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             IEnumerable<SystemWindow> resizableWindows = windowResizer.findResizableWindows(parent: null, depth: 1);
             foreach (SystemWindow window in resizableWindows) {
@@ -160,6 +173,8 @@ namespace WindowSizeGuard {
 
         public void Dispose() {
             Automation.RemoveAutomationPropertyChangedEventHandler(AutomationElement.RootElement, onAnyWindowRestored);
+            SystemEvents.UserPreferenceChanged  -= onUserPreferencesChanged;
+            SystemEvents.DisplaySettingsChanged -= onDisplaySettingsChanged;
         }
 
     }
