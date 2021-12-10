@@ -120,10 +120,10 @@ namespace WindowSizeGuard {
         }
 
         private static RECT convertProportionalRectangleToActualRectangle(Rect proportionalRectangle, RECT actualRectangle) {
-            return new((int) (actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
-                (int) (actualRectangle.Height * proportionalRectangle.Top) + actualRectangle.Top,
-                (int) (actualRectangle.Width * proportionalRectangle.Right) + actualRectangle.Left,
-                (int) (actualRectangle.Height * proportionalRectangle.Bottom) + actualRectangle.Top
+            return new RECT((int)(actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
+                (int)(actualRectangle.Height * proportionalRectangle.Top) + actualRectangle.Top,
+                (int)(actualRectangle.Width * proportionalRectangle.Right) + actualRectangle.Left,
+                (int)(actualRectangle.Height * proportionalRectangle.Bottom) + actualRectangle.Top
             );
         }
 
@@ -155,15 +155,15 @@ namespace WindowSizeGuard {
             return zone switch {
                 WindowZone.RIGHT => new[] {
                     new Rect(0.5, 0, 0.5, 1),
-                    new Rect(2.0 / 3.0, 0, 1.0 / 3.0, 1),
                     new Rect(1.0 / 3.0, 0, 2.0 / 3.0, 1),
+                    new Rect(2.0 / 3.0, 0, 1.0 / 3.0, 1),
                     new Rect(0.75, 0, 0.25, 1),
                     new Rect(0.5, 0, 0.25, 1)
                 },
                 WindowZone.LEFT => new[] {
                     new Rect(0, 0, 0.5, 1),
-                    new Rect(0, 0, 1.0 / 3.0, 1),
                     new Rect(0, 0, 2.0 / 3.0, 1),
+                    new Rect(0, 0, 1.0 / 3.0, 1),
                     new Rect(0, 0, 0.25, 1),
                     new Rect(0.25, 0, 0.25, 1),
                 },
@@ -177,29 +177,29 @@ namespace WindowSizeGuard {
                 },
                 WindowZone.TOP_LEFT => new[] {
                     new Rect(0, 0, 0.5, 0.5),
-                    new Rect(0, 0, 1.0 / 3.0, 0.5),
                     new Rect(0, 0, 2.0 / 3.0, 0.5),
+                    new Rect(0, 0, 1.0 / 3.0, 0.5),
                     new Rect(0, 0, 0.25, 0.5),
                     new Rect(0.25, 0, 0.25, 0.5)
                 },
                 WindowZone.TOP_RIGHT => new[] {
                     new Rect(0.5, 0, 0.5, 0.5),
-                    new Rect(2.0 / 3.0, 0, 1.0 / 3.0, 0.5),
                     new Rect(1.0 / 3.0, 0, 2.0 / 3.0, 0.5),
+                    new Rect(2.0 / 3.0, 0, 1.0 / 3.0, 0.5),
                     new Rect(0.75, 0, 0.25, 0.5),
                     new Rect(0.5, 0, 0.25, 0.5)
                 },
                 WindowZone.BOTTOM_LEFT => new[] {
                     new Rect(0, 0.5, 0.5, 0.5),
-                    new Rect(0, 0.5, 1.0 / 3.0, 0.5),
                     new Rect(0, 0.5, 2.0 / 3.0, 0.5),
+                    new Rect(0, 0.5, 1.0 / 3.0, 0.5),
                     new Rect(0, 0.5, 0.25, 0.5),
                     new Rect(0.25, 0.5, 0.25, 0.5)
                 },
                 WindowZone.BOTTOM_RIGHT => new[] {
                     new Rect(0.5, 0.5, 0.5, 0.5),
-                    new Rect(2.0 / 3.0, 0.5, 1.0 / 3.0, 0.5),
                     new Rect(1.0 / 3.0, 0.5, 2.0 / 3.0, 0.5),
+                    new Rect(2.0 / 3.0, 0.5, 1.0 / 3.0, 0.5),
                     new Rect(0.75, 0.5, 0.25, 0.5),
                     new Rect(0.5, 0.5, 0.25, 0.5)
                 },

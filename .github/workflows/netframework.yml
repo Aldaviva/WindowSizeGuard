@@ -1,0 +1,31 @@
+name: .NET Framework
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    env:
+      ProjectName: WindowSizeGuard
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Clone
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Restore and build
+      run: msbuild $env:ProjectName /p:Configuration=Release -t:build -restore
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ProjectName }}.exe
+        path: ${{ env.ProjectName }}\bin\Release\*.exe
+        if-no-files-found: error
