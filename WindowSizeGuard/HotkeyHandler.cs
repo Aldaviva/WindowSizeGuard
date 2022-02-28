@@ -37,7 +37,7 @@ namespace WindowSizeGuard {
         }
 
         public void onKeyDown(object sender, KeyEventArgs _e) {
-            var e = (KeyEventArgsExt) _e;
+            KeyEventArgsExt e = (KeyEventArgsExt)_e;
             e.Handled = true; //will be set back to false at the end of this method if nothing handles this key
 
             SystemWindow foregroundWindow = SystemWindow.ForegroundWindow;

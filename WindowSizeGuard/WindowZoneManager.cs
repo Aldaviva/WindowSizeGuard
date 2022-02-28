@@ -120,10 +120,10 @@ namespace WindowSizeGuard {
         }
 
         private static RECT convertProportionalRectangleToActualRectangle(Rect proportionalRectangle, RECT actualRectangle) {
-            return new RECT((int)(actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
-                (int)(actualRectangle.Height * proportionalRectangle.Top) + actualRectangle.Top,
-                (int)(actualRectangle.Width * proportionalRectangle.Right) + actualRectangle.Left,
-                (int)(actualRectangle.Height * proportionalRectangle.Bottom) + actualRectangle.Top
+            return new RECT((int) (actualRectangle.Width * proportionalRectangle.Left) + actualRectangle.Left,
+                (int) (actualRectangle.Height * proportionalRectangle.Top) + actualRectangle.Top,
+                (int) (actualRectangle.Width * proportionalRectangle.Right) + actualRectangle.Left,
+                (int) (actualRectangle.Height * proportionalRectangle.Bottom) + actualRectangle.Top
             );
         }
 
@@ -204,9 +204,9 @@ namespace WindowSizeGuard {
                     new Rect(0.5, 0.5, 0.25, 0.5)
                 },
                 WindowZone.CENTER => new[] {
+                    new Rect(0, 0, 1, 1),
                     new Rect(0.25, 0, 0.5, 1),
-                    new Rect(1.0 / 3.0, 0, 1.0 / 3.0, 1),
-                    new Rect(0, 0, 1, 1)
+                    new Rect(1.0 / 3.0, 0, 1.0 / 3.0, 1)
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(zone), zone, "unknown WindowZone")
             };
