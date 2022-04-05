@@ -35,7 +35,8 @@ namespace WindowSizeGuard {
         TOP_RIGHT,
         BOTTOM_LEFT,
         BOTTOM_RIGHT,
-        CENTER
+        CENTER,
+        FAKE_MAXIMIZED
 
     }
 
@@ -66,7 +67,12 @@ namespace WindowSizeGuard {
         }
 
         public void maximizeForegroundWindow() {
-            SystemWindow.ForegroundWindow.WindowState = FormWindowState.Maximized;
+            SystemWindow foregroundWindow = SystemWindow.ForegroundWindow;
+            if (foregroundWindow.WindowState != FormWindowState.Maximized) {
+                foregroundWindow.WindowState = FormWindowState.Maximized;
+            } else {
+                resizeWindowToZone(foregroundWindow, WindowZone.FAKE_MAXIMIZED, 0);
+            }
         }
 
         public void minimizeForegroundWindow() {
@@ -81,7 +87,8 @@ namespace WindowSizeGuard {
             }
 
             if (oldWindowState == FormWindowState.Maximized) {
-                rectangleInZone = 0;
+                rectangleInZone    = 0;
+                window.WindowState = FormWindowState.Normal; //restore before getting the window's padding, because it might be weirdly positioned while maximized (Photoshop Save for Web)
             }
 
             IList<Rect> proportionalRectanglesForZone = getProportionalRectanglesForZone(zone).ToList();
@@ -111,10 +118,6 @@ namespace WindowSizeGuard {
 
             // LOGGER.Debug(
             //     $"Moving {window.Process.ProcessName} to [top={newPositionRelativeToScreen.Top}, bottom={newPositionRelativeToScreen.Bottom}, left={newPositionRelativeToScreen.Left}, right={newPositionRelativeToScreen.Right}, width={newPositionRelativeToScreen.Width}, height={newPositionRelativeToScreen.Height}], accounting for window padding of {windowPadding.toString()}");
-
-            if (oldWindowState == FormWindowState.Maximized) {
-                window.WindowState = FormWindowState.Normal;
-            }
 
             windowResizer.moveWindowToPosition(window, newPositionWithPaddingRemoved);
         }
@@ -158,7 +161,8 @@ namespace WindowSizeGuard {
                     new Rect(1.0 / 3.0, 0, 2.0 / 3.0, 1),
                     new Rect(2.0 / 3.0, 0, 1.0 / 3.0, 1),
                     new Rect(0.75, 0, 0.25, 1),
-                    new Rect(0.5, 0, 0.25, 1)
+                    new Rect(0.5, 0, 0.25, 1),
+                    new Rect(0.25, 0, 0.75, 1)
                 },
                 WindowZone.LEFT => new[] {
                     new Rect(0, 0, 0.5, 1),
@@ -166,6 +170,7 @@ namespace WindowSizeGuard {
                     new Rect(0, 0, 1.0 / 3.0, 1),
                     new Rect(0, 0, 0.25, 1),
                     new Rect(0.25, 0, 0.25, 1),
+                    new Rect(0, 0, 0.75, 1)
                 },
                 WindowZone.TOP => new[] {
                     new Rect(0, 0, 1, 0.5),
@@ -204,9 +209,11 @@ namespace WindowSizeGuard {
                     new Rect(0.5, 0.5, 0.25, 0.5)
                 },
                 WindowZone.CENTER => new[] {
-                    new Rect(0, 0, 1, 1),
                     new Rect(0.25, 0, 0.5, 1),
                     new Rect(1.0 / 3.0, 0, 1.0 / 3.0, 1)
+                },
+                WindowZone.FAKE_MAXIMIZED => new[] {
+                    new Rect(0, 0, 1, 1),
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(zone), zone, "unknown WindowZone")
             };

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Ben Hutchison")]
 [assembly: AssemblyProduct("WindowSizeGuard")]
-[assembly: AssemblyCopyright("Copyright © Ben Hutchison 2020")]
+[assembly: AssemblyCopyright("© 2022 Ben Hutchison")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
