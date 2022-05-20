@@ -20,10 +20,12 @@ namespace WindowSizeGuard {
         private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
 
         private readonly WindowZoneManager    windowZoneManager;
+        private readonly MonitorSwitcher      monitorSwitcher;
         private readonly IKeyboardMouseEvents globalHook;
 
-        public HotkeyHandlerImpl(WindowZoneManager windowZoneManager) {
+        public HotkeyHandlerImpl(WindowZoneManager windowZoneManager, MonitorSwitcher monitorSwitcher) {
             this.windowZoneManager = windowZoneManager;
+            this.monitorSwitcher   = monitorSwitcher;
 
             globalHook         =  Hook.GlobalEvents();
             globalHook.KeyDown += onKeyDown;
@@ -37,7 +39,7 @@ namespace WindowSizeGuard {
         }
 
         public void onKeyDown(object sender, KeyEventArgs _e) {
-            KeyEventArgsExt e = (KeyEventArgsExt)_e;
+            KeyEventArgsExt e = (KeyEventArgsExt) _e;
             e.Handled = true; //will be set back to false at the end of this method if nothing handles this key
 
             SystemWindow foregroundWindow = SystemWindow.ForegroundWindow;
@@ -90,6 +92,9 @@ namespace WindowSizeGuard {
                     break;
                 case Keys.Delete when winAltPressed:
                     // do nothing, to prevent accidental deletion when alt is pressed
+                    break;
+                case Keys.P when winPressed:
+                    monitorSwitcher.switchToSingleOtherMonitor();
                     break;
                 default:
                     e.Handled = false;
