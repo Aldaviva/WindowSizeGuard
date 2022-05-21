@@ -67,7 +67,6 @@
     <Compile Include="ShellHook.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ProgramHandlers\ExplorerDesktopHandler.cs" />
     <Compile Include="ProgramHandlers\GitExtensionsHandler.cs" />
     <Compile Include="HotkeyHandler.cs" />
     <Compile Include="MainClass.cs" />

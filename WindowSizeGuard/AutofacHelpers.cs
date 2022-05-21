@@ -5,33 +5,31 @@ using System.Reflection;
 using Autofac;
 using JetBrains.Annotations;
 
-namespace WindowSizeGuard {
+namespace WindowSizeGuard;
 
-    public static class AutofacHelpers {
+public static class AutofacHelpers {
 
-        public static IContainer createContainer() {
-            var containerBuilder = new ContainerBuilder();
-            var assembly = Assembly.GetExecutingAssembly();
+    public static IContainer createContainer() {
+        ContainerBuilder containerBuilder = new();
+        Assembly         assembly         = Assembly.GetExecutingAssembly();
 
-            containerBuilder.RegisterAssemblyTypes(assembly)
-                            .Where(t => t.GetCustomAttribute<ComponentAttribute>() != null)
-                            .AsImplementedInterfaces()
-                            .AsSelf()
-                            .InstancePerLifetimeScope()
-                            .OnActivated(eventArgs => eventArgs.Instance.GetType().GetMethod("PostConstruct", new Type[0])?.Invoke(eventArgs.Instance, new object[0]));
+        containerBuilder.RegisterAssemblyTypes(assembly)
+            .Where(t => t.GetCustomAttribute<ComponentAttribute>() != null)
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .InstancePerLifetimeScope()
+            .OnActivated(eventArgs => eventArgs.Instance.GetType().GetMethod("PostConstruct", Type.EmptyTypes)?.Invoke(eventArgs.Instance, Array.Empty<object>()));
 
-            containerBuilder.RegisterAssemblyModules(assembly);
+        containerBuilder.RegisterAssemblyModules(assembly);
 
-            return containerBuilder.Build();
-        }
-
+        return containerBuilder.Build();
     }
 
-    /// <summary>
-    /// Automatically register this class in the Autofac container. It will use the <c>InstancePerLifetimeScope</c> scope.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    [MeansImplicitUse]
-    public class ComponentAttribute: Attribute { }
-
 }
+
+/// <summary>
+/// Automatically register this class in the Autofac container. It will use the <c>InstancePerLifetimeScope</c> scope.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[MeansImplicitUse]
+public class ComponentAttribute: Attribute { }
