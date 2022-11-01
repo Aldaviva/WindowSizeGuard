@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet">
-      <Version>0.12.1</Version>
+      <Version>0.13.2</Version>
     </PackageReference>
     <PackageReference Include="FakeItEasy">
       <Version>6.2.0</Version>
