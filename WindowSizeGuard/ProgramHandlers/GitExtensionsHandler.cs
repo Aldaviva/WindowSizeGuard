@@ -33,7 +33,7 @@ public class GitExtensionsHandlerImpl: GitExtensionsHandler, IDisposable {
 
     public IEnumerable<SystemWindow> commitWindows => new HashSet<SystemWindow>(_commitWindows);
 
-    private readonly DebouncedAction<bool> _onWindowClosedThrottled;
+    private readonly RateLimitedAction<bool> _onWindowClosedThrottled;
 
     private ISet<SystemWindow> _commitWindows = new HashSet<SystemWindow>();
 
@@ -51,7 +51,7 @@ public class GitExtensionsHandlerImpl: GitExtensionsHandler, IDisposable {
         windowOpeningListener.windowOpened += onWindowOpened;
         Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, AutomationElement.RootElement, TreeScope.Subtree, onWindowClosedThrottled);
 
-        _onWindowClosedThrottled.Run(true);
+        _onWindowClosedThrottled.Invoke(true);
 
         LOGGER.Trace("Waiting for Git Extensions commit window");
     }
@@ -66,7 +66,7 @@ public class GitExtensionsHandlerImpl: GitExtensionsHandler, IDisposable {
     }
 
     private void onWindowClosedThrottled(object? sender = null, AutomationEventArgs? e = null) {
-        _onWindowClosedThrottled.Run(false);
+        _onWindowClosedThrottled.Invoke(false);
     }
 
     private void onWindowClosed(bool firstRun = false) {
@@ -107,6 +107,8 @@ public class GitExtensionsHandlerImpl: GitExtensionsHandler, IDisposable {
 
         timer.Stop();
         timer.Dispose();
+
+        _onWindowClosedThrottled.Dispose();
     }
 
 }
