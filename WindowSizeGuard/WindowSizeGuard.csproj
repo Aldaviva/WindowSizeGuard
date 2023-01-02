@@ -106,7 +106,7 @@
       <Version>0.3.0.5</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>5.0.5</Version>
+      <Version>5.1.1</Version>
     </PackageReference>
     <PackageReference Include="SimWinMouse">
       <Version>1.0.2</Version>
