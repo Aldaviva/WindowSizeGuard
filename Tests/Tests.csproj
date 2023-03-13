@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet">
-      <Version>0.13.2</Version>
+      <Version>0.13.5</Version>
     </PackageReference>
     <PackageReference Include="FakeItEasy">
       <Version>7.3.1</Version>
@@ -68,7 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WindowSizeGuard\WindowSizeGuard.csproj">
-      <Project>{670c3660-0020-4577-a052-91552376b63f}</Project>
+      <Project>{670C3660-0020-4577-A052-91552376B63F}</Project>
       <Name>WindowSizeGuard</Name>
     </ProjectReference>
   </ItemGroup>
