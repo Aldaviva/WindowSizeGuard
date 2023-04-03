@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using ManagedWinapi.Windows;
 
-namespace WindowSizeGuard; 
+namespace WindowSizeGuard;
 
 public readonly struct WindowSelector {
 
@@ -45,8 +45,10 @@ public readonly struct WindowSelector {
         try {
             return (className?.Equals(window.ClassName) ?? true) &&
                 (titlePattern?.IsMatch(window.Title) ?? true) &&
-                (executableBaseNameWithoutExeExtension?.Equals(window.Process.ProcessName) ?? true);
+                (executableBaseNameWithoutExeExtension?.Equals(window.getProcessExecutableBasename()) ?? true);
         } catch (Win32Exception) {
+            return false;
+        } catch (InvalidOperationException) {
             return false;
         }
     }

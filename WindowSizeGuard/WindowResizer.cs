@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ManagedWinapi.Windows;
+using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard;
 
@@ -33,7 +34,13 @@ public interface WindowResizer {
 [Component]
 public class WindowResizerImpl: WindowResizer {
 
-    private const int BORDER_LINE_THICKNESS = 1; // thickness of the semitransparent border that Windows 10 drawns on most normal windows, like Notepad
+    private const int BORDER_LINE_THICKNESS = 1; // thickness of the semitransparent border that Windows 10 draws on most normal windows, like Notepad
+
+    private readonly VivaldiHandler vivaldiHandler;
+
+    public WindowResizerImpl(VivaldiHandler vivaldiHandler) {
+        this.vivaldiHandler = vivaldiHandler;
+    }
 
     public RECT enlargeRectangle(RECT windowRectangle, RECT padding) {
         windowRectangle.Left   -= padding.Left;
@@ -53,10 +60,18 @@ public class WindowResizerImpl: WindowResizer {
     }
 
     public RECT getWindowPadding(SystemWindow window) {
+        /*
+         * In Vivaldi 5.7, windows gained an invisible 1px border on the left, right, and bottom.
+         * Without the following special case, there would be a 1px gap on those sides when resized by WindowSizeGuard.
+         */
+        if (vivaldiHandler.windowSelector.matches(window)) {
+            return new RECT(1, 0, 1, 1);
+        }
+
         RECT positionWithPadding    = window.Rectangle;
         RECT positionWithoutPadding = getAccuratePosition(window);
 
-        //custom-drawn windows (like Office, Visual Studio, Photoshop, and Vivaldi) don't have the 1px semitransparent border
+        //custom-drawn windows (like Office, Visual Studio, and Photoshop) don't have the 1px semitransparent border
         //traditional windows (like notepad or UWP apps) get a semitransparent 1px border that we want to exclude here, because abutting windows should not show the desktop between them
         bool isCustomDrawnWindow = positionWithPadding.Equals(positionWithoutPadding);
         int  borderThickness     = isCustomDrawnWindow ? 0 : BORDER_LINE_THICKNESS;
@@ -109,7 +124,7 @@ public class WindowResizerImpl: WindowResizer {
         return Math.Sqrt(squaredEdgeDistances);
     }
 
-    private RECT getAccuratePosition(SystemWindow window) {
+    private static RECT getAccuratePosition(SystemWindow window) {
         DwmGetWindowAttribute(window.HWnd, DwmWindowAttribute.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT extendedFrameBounds, Marshal.SizeOf<RECT>());
         return extendedFrameBounds;
     }

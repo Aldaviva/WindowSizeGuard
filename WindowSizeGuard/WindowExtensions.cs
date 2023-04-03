@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Forms;
@@ -8,7 +9,7 @@ using Gma.System.MouseKeyHook;
 using Gma.System.MouseKeyHook.Implementation;
 using ManagedWinapi.Windows;
 
-namespace WindowSizeGuard; 
+namespace WindowSizeGuard;
 
 public static class WindowExtensions {
 
@@ -31,6 +32,11 @@ public static class WindowExtensions {
 
     public static SystemWindow toSystemWindow(this AutomationElement automationWindow) {
         return new SystemWindow(new IntPtr(automationWindow.Current.NativeWindowHandle));
+    }
+
+    public static string getProcessExecutableBasename(this SystemWindow window) {
+        using Process process = window.Process;
+        return process.ProcessName;
     }
 
 }

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using ManagedWinapi.Windows;
 using NLog;
 
-namespace WindowSizeGuard.ProgramHandlers; 
+namespace WindowSizeGuard.ProgramHandlers;
 
 public interface VivaldiHandler {
 
@@ -25,7 +25,7 @@ public class VivaldiHandlerImpl: VivaldiHandler {
     public WindowSelector windowSelector { get; } = new(className: "Chrome_WidgetWin_1", title: new Regex(@"(?: - Vivaldi$)|(?:^Picture in picture$)"));
 
     public void fixVivaldiResizeBug(SystemWindow window) {
-        //SystemWindow.Position is inaccurate in Windows 10 because traditional (non-metro) windows report a Position that is bigger than the actual window's pixels, but this is okay because we're only do relative resizing here.
+        //SystemWindow.Position is inaccurate in Windows 10 because traditional (non-metro) windows report a Position that is bigger than the actual window's pixels, but this is okay because we're only doing relative resizing here.
         RECT oldSize     = window.Position;
         RECT desiredSize = oldSize;
         desiredSize.Right++;
