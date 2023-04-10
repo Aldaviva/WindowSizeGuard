@@ -35,9 +35,9 @@
       },
       "MouseKeyHook": {
         "type": "Direct",
-        "requested": "[5.6.0, )",
-        "resolved": "5.6.0",
-        "contentHash": "xDNM10IfRED0+k78O9VvY0/suqeNJVg6GttEFPP/N4CEMujwVrfU+UatFN7Rb+gdjqIfhKblz7/nG3pUQmHaJg=="
+        "requested": "[5.7.1, )",
+        "resolved": "5.7.1",
+        "contentHash": "c0VhB6cbcOpMOcoCQmvPMVqxaH76S4IPHwpbCIY7XKUNimdj9+81rX+Evnu5O53xYgUvdD7g0qmlVeZP2wGCnA=="
       },
       "mwinapi": {
         "type": "Direct",

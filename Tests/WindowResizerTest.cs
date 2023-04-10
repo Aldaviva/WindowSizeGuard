@@ -8,6 +8,7 @@ using System.Windows.Automation;
 using BenchmarkDotNet.Attributes;
 using ManagedWinapi.Windows;
 using WindowSizeGuard;
+using WindowSizeGuard.ProgramHandlers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -29,7 +30,7 @@ namespace Tests {
         public WindowResizerTest(ITestOutputHelper? testOutputHelper = null): base(testOutputHelper) {
             this.testOutputHelper = testOutputHelper;
             window                = SystemWindow.DesktopWindow;
-            windowResizer         = new WindowResizerImpl();
+            windowResizer         = new WindowResizerImpl(new VivaldiHandlerImpl());
         }
 
         // [Benchmark]
@@ -63,7 +64,7 @@ namespace Tests {
         public void getWindowPadding() {
             Process p = Process.Start("notepad");
             p.WaitForInputIdle();
-            SystemWindow systemWindow  = new SystemWindow(p.MainWindowHandle);
+            SystemWindow systemWindow  = new(p.MainWindowHandle);
             RECT         windowPadding = windowResizer.getWindowPadding(systemWindow);
             testOutputHelper!.WriteLine(windowPadding.toString());
             p.Kill();
