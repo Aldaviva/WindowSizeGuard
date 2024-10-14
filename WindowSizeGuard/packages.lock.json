@@ -26,12 +26,9 @@
       },
       "morelinq": {
         "type": "Direct",
-        "requested": "[3.4.2, )",
-        "resolved": "3.4.2",
-        "contentHash": "nKdpt7Ai+xQO8PZ0YFTn13INGJcKO0Nx65kO/ut0zaDirRo6d7atedmW2l68YB3x7U4pOqTLdMfYsBys8KxA1Q==",
-        "dependencies": {
-          "System.ValueTuple": "4.5.0"
-        }
+        "requested": "[4.3.0, )",
+        "resolved": "4.3.0",
+        "contentHash": "mQ0CBsO+dgrLOR8jC8NUcuz7ohH1NAbRn3XRrfpVt5PqcK8YLUmDbmIQfUEosQwtI7l41QcIf1xBhkR0w3b72A=="
       },
       "MouseKeyHook": {
         "type": "Direct",
@@ -111,15 +108,7 @@
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "4.5.2"
         }
-      },
-      "System.ValueTuple": {
-        "type": "Transitive",
-        "resolved": "4.5.0",
-        "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       }
-    },
-    ".NETFramework,Version=v4.8/win": {},
-    ".NETFramework,Version=v4.8/win-x64": {},
-    ".NETFramework,Version=v4.8/win-x86": {}
+    }
   }
 }
