@@ -53,9 +53,9 @@
       },
       "SimWinMouse": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "uG0VbsJyjJkFnAt979yEWGxe5i0YaCyCjAlpLTn7lTbMaVYm0EqVgz6KlCa+nAmtA9qAw2KaXfn21OHChJdXFw=="
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "jSeT8KeRo/EcYuMax1HLCjEIjY22S6eUertACOM8PbGbFfRccb5oL0lvM7B5/WNZxdT1cHNuYNwD6M7PzVCwXg=="
       },
       "ThrottleDebounce": {
         "type": "Direct",
@@ -117,9 +117,6 @@
         "resolved": "4.5.0",
         "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       }
-    },
-    ".NETFramework,Version=v4.8/win": {},
-    ".NETFramework,Version=v4.8/win-x64": {},
-    ".NETFramework,Version=v4.8/win-x86": {}
+    }
   }
 }
