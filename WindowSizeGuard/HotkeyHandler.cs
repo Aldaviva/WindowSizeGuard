@@ -1,12 +1,12 @@
-﻿#nullable enable
+#nullable enable
 
-using System;
-using System.Windows.Forms;
 using Gma.System.MouseKeyHook;
 using ManagedWinapi.Windows;
 using NLog;
+using System;
+using System.Windows.Forms;
 
-namespace WindowSizeGuard; 
+namespace WindowSizeGuard;
 
 public interface HotkeyHandler {
 
@@ -17,7 +17,7 @@ public interface HotkeyHandler {
 [Component]
 public class HotkeyHandlerImpl: HotkeyHandler, IDisposable {
 
-    private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
+    private static readonly Logger LOGGER = LogManager.GetLogger(typeof(HotkeyHandlerImpl).FullName!);
 
     private readonly WindowZoneManager    windowZoneManager;
     private readonly MonitorSwitcher      monitorSwitcher;

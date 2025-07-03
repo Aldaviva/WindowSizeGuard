@@ -1,15 +1,15 @@
-﻿#nullable enable
+#nullable enable
 
+using ManagedWinapi.Windows;
+using MoreLinq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
-using ManagedWinapi.Windows;
-using MoreLinq;
 
-namespace WindowSizeGuard; 
+namespace WindowSizeGuard;
 
 public interface WindowZoneManager {
 
@@ -133,7 +133,7 @@ public class WindowZoneManagerImpl: WindowZoneManager {
     public WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea) {
         return Enum.GetValues(typeof(WindowZone)).Cast<WindowZone>()
             .Select(zone => findClosestZoneRectangleToWindow(windowPosition, workingArea, zone))
-            .MinBy(result => result.distance).First();
+            .Minima(result => result.distance).First();
     }
 
     private WindowZoneSearchResult findClosestZoneRectangleToWindow(RECT windowPosition, RECT workingArea, WindowZone zone) {
@@ -151,7 +151,7 @@ public class WindowZoneManagerImpl: WindowZoneManager {
             return result;
         });
 
-        return windowZoneSearchResults.MinBy(result => result.distance).First();
+        return windowZoneSearchResults.Minima(result => result.distance).First();
     }
 
     private static IEnumerable<Rect> getProportionalRectanglesForZone(WindowZone zone) {

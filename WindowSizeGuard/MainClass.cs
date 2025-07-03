@@ -1,16 +1,16 @@
-﻿#nullable enable
+#nullable enable
 
-using System;
-using System.Windows.Forms;
 using Autofac;
 using NLog;
+using System;
+using System.Windows.Forms;
 using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard;
 
 public static class MainClass {
 
-    private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
+    private static readonly Logger LOGGER = LogManager.GetLogger(typeof(MainClass).FullName!);
 
     [STAThread] //important, otherwise hotkeys don't trigger and Windows times out after ~2 seconds, then handles the hotkey normally
     public static void Main() {

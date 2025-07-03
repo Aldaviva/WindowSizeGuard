@@ -1,12 +1,6 @@
-﻿#nullable enable
+namespace WindowSizeGuard;
 
-using System;
-using System.Collections.Concurrent;
-using System.Threading;
-
-namespace WindowSizeGuard; 
-
-public static class ConcurrentDictionaryExtensions {
+/*public static class ConcurrentDictionaryExtensions {
 
     public static ConcurrentDictionary<K, ValueHolder<V>> createConcurrentDictionary<K, V>() {
         return new ConcurrentDictionary<K, ValueHolder<V>>();
@@ -35,12 +29,8 @@ public static class ConcurrentDictionaryExtensions {
 
 }
 
-public class ValueHolder<T> {
+public class ValueHolder<T>(T value) {
 
-    public T value;
+    public T value = value;
 
-    public ValueHolder(T value) {
-        this.value = value;
-    }
-
-}
+}*/

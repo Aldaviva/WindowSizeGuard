@@ -1,10 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
+using ManagedWinapi.Windows;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using ManagedWinapi.Windows;
 using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard;
@@ -62,10 +62,11 @@ public class WindowResizerImpl: WindowResizer {
     public RECT getWindowPadding(SystemWindow window) {
         /*
          * In Vivaldi 5.7, windows gained an invisible 1px border on the left, right, and bottom.
-         * Without the following special case, there would be a 1px gap on those sides when resized by WindowSizeGuard.
+         * In Vivaldi 7.5, that border was increased from 1px to 8px.
+         * Without the following special case, there would be a gap on those sides when resized by WindowSizeGuard.
          */
         if (vivaldiHandler.windowSelector.matches(window)) {
-            return new RECT(1, 0, 1, 1);
+            return new RECT(8, 0, 8, 8);
         }
 
         RECT positionWithPadding    = window.Rectangle;

@@ -1,17 +1,18 @@
-﻿#nullable enable
+#nullable enable
 
+using ManagedWinapi.Windows;
+using SimWinInput;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Forms;
-using ManagedWinapi.Windows;
-using SimWinInput;
+using Unfucked;
 
 namespace WindowSizeGuard.ProgramHandlers;
 
-public interface MicrosoftManagementConsoleHandler { }
+public interface MicrosoftManagementConsoleHandler;
 
 [Component]
 public class MicrosoftManagementConsoleHandlerImpl: MicrosoftManagementConsoleHandler {
@@ -48,8 +49,8 @@ public class MicrosoftManagementConsoleHandlerImpl: MicrosoftManagementConsoleHa
             automationElement = automationElement?.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.AutomationIdProperty, childAutomationId));
         }
 
-        return automationElement != null && automationElement.TryGetClickablePoint(out Point _)
-            ? automationElement.toSystemWindow().Rectangle
+        return automationElement != null && automationElement.TryGetClickablePoint(out Point _) && automationElement.ToSystemWindow() is { } win
+            ? win.Rectangle
             : default;
     }
 

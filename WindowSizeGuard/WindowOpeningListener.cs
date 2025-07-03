@@ -1,15 +1,17 @@
-﻿#nullable enable
+#nullable enable
 
+using ManagedWinapi.Windows;
 using System;
 using System.Collections.Concurrent;
 using System.Windows.Automation;
-using ManagedWinapi.Windows;
+using Unfucked;
 
 namespace WindowSizeGuard;
 
 public interface WindowOpeningListener {
 
     delegate void OnWindowOpened(SystemWindow? window);
+
     event OnWindowOpened? windowOpened;
 
 }
@@ -21,8 +23,7 @@ public class WindowOpeningListenerImpl: WindowOpeningListener, IDisposable {
 
     private readonly ShellHook shellHook;
 
-    private readonly ConcurrentDictionary<int, ValueHolder<long>> alreadyOpenedWindows =
-        ConcurrentDictionaryExtensions.createConcurrentDictionary<int, long>();
+    private readonly ConcurrentDictionary<int, ValueHolder<long>> alreadyOpenedWindows = Enumerables.CreateConcurrentDictionary<int, long>();
 
     public WindowOpeningListenerImpl() {
         shellHook            =  new ShellHookImpl();
@@ -38,16 +39,16 @@ public class WindowOpeningListenerImpl: WindowOpeningListener, IDisposable {
     }
 
     private void onWindowOpened(object? sender, AutomationEventArgs e) {
-        if (sender is AutomationElement windowEl) {
-            onWindowOpened(windowEl.toSystemWindow());
+        if (sender is AutomationElement windowEl && windowEl.ToSystemWindow() is { } systemWindow) {
+            onWindowOpened(systemWindow);
         }
     }
 
     private void onWindowOpened(SystemWindow window) {
-        DateTime now            = DateTime.Now;
-        DateTime lastOpenedTime = DateTime.FromBinary(alreadyOpenedWindows.exchange(window.HWnd.ToInt32(), now.ToBinary()));
+        DateTime  now            = DateTime.Now;
+        DateTime? lastOpenedTime = alreadyOpenedWindows.Exchange(window.HWnd.ToInt32(), now.ToBinary()) is { } openedTime ? DateTime.FromBinary(openedTime) : null;
 
-        bool isNewWindow = lastOpenedTime == now;
+        bool isNewWindow = lastOpenedTime == null;
         if (isNewWindow) {
             windowOpened?.Invoke(window);
         }

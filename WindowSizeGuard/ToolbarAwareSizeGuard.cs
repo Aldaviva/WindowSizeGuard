@@ -1,5 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
+using KoKo.Events;
+using KoKo.Property;
+using ManagedWinapi.Windows;
+using Microsoft.Win32;
+using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,11 +15,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Forms;
-using KoKo.Events;
-using KoKo.Property;
-using ManagedWinapi.Windows;
-using Microsoft.Win32;
-using NLog;
+using Unfucked;
 using WindowSizeGuard.ProgramHandlers;
 
 namespace WindowSizeGuard;
@@ -22,6 +23,7 @@ namespace WindowSizeGuard;
 public interface ToolbarAwareSizeGuard {
 
     delegate void OnToolbarVisibilityChanged(bool isToolbarVisible);
+
     event OnToolbarVisibilityChanged? toolbarVisibilityChanged;
 
 }
@@ -29,7 +31,7 @@ public interface ToolbarAwareSizeGuard {
 [Component]
 public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
 
-    private static readonly Logger LOGGER = LogManager.GetCurrentClassLogger();
+    private static readonly Logger LOGGER = LogManager.GetLogger(typeof(ToolbarAwareSizeGuardImpl).FullName!);
 
     private const int ESTIMATED_TOOLBAR_HEIGHT          = 25;
     private const int HORIZONTAL_EDGE_TOLERANCE         = 3;
@@ -44,12 +46,12 @@ public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
     private readonly VivaldiHandler       vivaldiHandler;
     private readonly GitExtensionsHandler gitExtensionsHandler;
 
-    private readonly ManuallyRecalculatedProperty<Rectangle>     workingArea            = new(() => Screen.PrimaryScreen.WorkingArea);
-    private readonly ConcurrentDictionary<int, ValueHolder<int>> windowVisualStateCache = ConcurrentDictionaryExtensions.createConcurrentDictionary<int, int>();
+    private readonly ManuallyRecalculatedProperty<Rectangle>                          workingArea            = new(() => Screen.PrimaryScreen.WorkingArea);
+    private readonly ConcurrentDictionary<int, EnumValueHolder<FormWindowState, int>> windowVisualStateCache = Enumerables.CreateConcurrentEnumDictionary<int, FormWindowState, int>();
 
     public event ToolbarAwareSizeGuard.OnToolbarVisibilityChanged? toolbarVisibilityChanged;
 
-    public ToolbarAwareSizeGuardImpl(WindowResizer         windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler,
+    public ToolbarAwareSizeGuardImpl(WindowResizer windowResizer, WindowZoneManager windowZoneManager, VivaldiHandler vivaldiHandler, GitExtensionsHandler gitExtensionsHandler,
                                      WindowOpeningListener windowOpeningListener) {
         this.windowResizer        = windowResizer;
         this.windowZoneManager    = windowZoneManager;
@@ -70,7 +72,7 @@ public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
         gitExtensionsHandler.commitWindowOpened += onAnyWindowOpened;
 
         foreach (SystemWindow toplevelWindow in SystemWindow.AllToplevelWindows) {
-            windowVisualStateCache[toplevelWindow.HWnd.ToInt32()] = new ValueHolder<int>((int) toplevelWindow.WindowState);
+            windowVisualStateCache[toplevelWindow.HWnd.ToInt32()] = new EnumValueHolder<FormWindowState, int>(toplevelWindow.WindowState);
         }
     }
 
@@ -98,8 +100,8 @@ public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
         int          windowHandle = ((AutomationElement) sender).Current.NativeWindowHandle;
         SystemWindow window       = new(new IntPtr(windowHandle));
 
-        FormWindowState newWindowState = window.WindowState;
-        FormWindowState oldWindowState = windowVisualStateCache.exchangeEnum(windowHandle, newWindowState);
+        FormWindowState  newWindowState = window.WindowState;
+        FormWindowState? oldWindowState = windowVisualStateCache.Exchange(windowHandle, newWindowState);
 
         if (oldWindowState != newWindowState && windowResizer.canWindowBeAutomaticallyResized(window)) {
             resizeWindowIfNecessary(window);
@@ -119,7 +121,7 @@ public class ToolbarAwareSizeGuardImpl: IDisposable, ToolbarAwareSizeGuard {
                         window.VisibilityFlag, window.WindowState, window.ClassName);
                 }
 
-                var newWindowState = new ValueHolder<int>((int) window.WindowState);
+                var newWindowState = new EnumValueHolder<FormWindowState, int>(window.WindowState);
                 windowVisualStateCache[window.HWnd.ToInt32()] = newWindowState;
             } catch (Win32Exception) {
                 //window was closed, do nothing

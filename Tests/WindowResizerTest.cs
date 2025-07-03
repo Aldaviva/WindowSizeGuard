@@ -1,16 +1,18 @@
-﻿#nullable enable
+#nullable enable
 
+using BenchmarkDotNet.Attributes;
+using ManagedWinapi.Windows;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
-using BenchmarkDotNet.Attributes;
-using ManagedWinapi.Windows;
 using WindowSizeGuard;
 using WindowSizeGuard.ProgramHandlers;
 using Xunit;
 using Xunit.Abstractions;
+
+#pragma warning disable xUnit1013 // it's a benchmark that must be public, stfu
 
 namespace Tests {
 

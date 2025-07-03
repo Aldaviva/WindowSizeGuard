@@ -1,8 +1,8 @@
-﻿#nullable enable
+#nullable enable
 
+using NLog;
 using System;
 using System.Runtime.InteropServices;
-using NLog;
 
 namespace WindowSizeGuard;
 
@@ -27,7 +27,7 @@ public interface MonitorSwitcher {
 [Component]
 public class MonitorSwitcherImpl: MonitorSwitcher {
 
-    private static readonly Logger LOGGER = LogManager.GetLogger(nameof(MonitorSwitcherImpl));
+    private static readonly Logger LOGGER = LogManager.GetLogger(typeof(MonitorSwitcherImpl).FullName!);
 
     // struct sizes were determined by calling Marshal.SizeOf() on the structs provided by https://github.com/dotnet/pinvoke/blob/main/src/User32/User32+DISPLAYCONFIG_PATH_INFO.cs and related files
     private const int  PATH_INFO_SIZE_BYTES      = 72;

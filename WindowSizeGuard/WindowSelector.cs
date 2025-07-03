@@ -1,9 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
+using ManagedWinapi.Windows;
 using System;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
-using ManagedWinapi.Windows;
+using Unfucked;
 
 namespace WindowSizeGuard;
 
@@ -45,7 +46,7 @@ public readonly struct WindowSelector {
         try {
             return (className?.Equals(window.ClassName) ?? true) &&
                 (titlePattern?.IsMatch(window.Title) ?? true) &&
-                (executableBaseNameWithoutExeExtension?.Equals(window.getProcessExecutableBasename()) ?? true);
+                (executableBaseNameWithoutExeExtension?.Equals(window.GetProcessExecutableBasename()) ?? true);
         } catch (Win32Exception) {
             return false;
         } catch (InvalidOperationException) {

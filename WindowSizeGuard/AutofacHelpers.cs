@@ -1,9 +1,9 @@
-﻿#nullable enable
+#nullable enable
 
-using System;
-using System.Reflection;
 using Autofac;
 using JetBrains.Annotations;
+using System;
+using System.Reflection;
 
 namespace WindowSizeGuard;
 
@@ -32,4 +32,4 @@ public static class AutofacHelpers {
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 [MeansImplicitUse]
-public class ComponentAttribute: Attribute { }
+public class ComponentAttribute: Attribute;
